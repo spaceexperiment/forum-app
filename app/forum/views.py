@@ -4,6 +4,7 @@ from flask import Blueprint, request, session, g, redirect, url_for, abort, \
 
 forum = Blueprint('forum', __name__)
 
+
 @forum.route('/')
 def index():
-    return 'forum index page'
+    return render_template('forum.html')
