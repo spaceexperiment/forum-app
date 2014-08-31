@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/user.css') }}">
+<title>Forum ~ user</title>
+{% endblock %}
+
+
+{% block body %}
+<div class="jumbotron center-block user-form">
+	<form class="form-horizontal" role="form" action="{{ url_for('.login') }}" method="post">
+
+		<legend>Login/register</legend>
+		{{ macros.render_form_errors(form) }}
+		<div class="form-group">
+			{{ form.username.label(class="col-sm-3 control-label") }}
+			<div class="col-sm-8">
+				{{ form.username(class="form-control", placeholder="username") }}
+			</div>
+		</div>
+
+		<div class="form-group">
+			{{ form.password.label(class="col-sm-3 control-label") }}
+			<div class="col-sm-8">
+				{{ form.password(class="form-control", placeholder="password") }}
+			</div>
+		</div>
+
+		<p class="text-center">Repeat password if you want to register this account</p>
+		<div class="form-group">
+			{{ form.repassword.label(class="col-sm-3 control-label") }}
+			<div class="col-sm-8">
+				{{ form.repassword(class="form-control",
+					placeholder="only for account creation") }}
+			</div>
+		</div>
+
+		<div class="form-group">
+			<button type="submit" class="btn btn-primary center-block">Submit</button>
+		</div>
+	</form>
+</div>
+
+{% endblock %}
