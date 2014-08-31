@@ -17,13 +17,13 @@ class BaseModel(object):
     def _create_id(cls, model=None):
         """key = model:id"""
 
-        return '{}:{}'.format(model or cls.model, redis.incr('next_user_id')) 
+        return '{}:{}'.format(model or cls.model, redis.incr('next_user_id'))
 
     @classmethod
     def _field_value_exists(cls, field, value):
         """
         check if value in -> key model:field
-        used to store values where no fields can have the 
+        used to store values where no fields can have the
         same values.
         """
 
@@ -34,7 +34,7 @@ class BaseModel(object):
     def _field_value_add(cls, field, value):
         """
         set value to -> key model:field
-        used to store values where no fields can have the 
+        used to store values where no fields can have the
         same values.
         """
 
@@ -55,7 +55,7 @@ class BaseModel(object):
 
         model = model or cls.model
         key = '{}:{}s'.format(model, model)
-        return redis.hget(key, field)        
+        return redis.hget(key, field)
 
 
 class User(BaseModel):
