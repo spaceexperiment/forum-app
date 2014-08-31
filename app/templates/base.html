@@ -1,3 +1,5 @@
+{% import 'macros.html' as macros %}
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -6,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/main.css" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -18,8 +21,25 @@
     {% endblock %}
   </head>
   <body>
-    {% block body %}{% endblock %}
+    <nav class="nav navbar-default navbar-fixed-top">      
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">Forum</a>
+      </div>
 
+      <ul class="nav navbar-nav">
+        <li><a href="#">Create thread</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="#">messages</a></li>
+        <li><a href="#">login / register</a></li>
+        <li><a href="#"></a></li>
+      </ul>
+    </nav>
+
+    <div class="body-wrapper">
+      {% block body %}{% endblock %}
+    </div>
+    
     <script src="/static/js/jquery-1.11.1.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
     {% block foot %}{% endblock %}

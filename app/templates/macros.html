@@ -1,0 +1,13 @@
+{% macro render_form_errors(form) -%}
+
+	{% if form.errors %}
+		<ul class="list-group">
+			{% for field_name, field_errors in form.errors|dictsort if field_errors %}
+				{% for error in field_errors %}
+					<li class="list-group-item active">{{ field_name }}: {{ error }}</li>
+				{% endfor %}
+			{% endfor %}
+		</ul>
+	{% endif %}
+
+{%- endmacro %}
