@@ -1,4 +1,16 @@
+body {
+  padding-top: 45px;
+}
+
 .body-wrapper {
   max-width: 960px;
   margin: 100px auto;
+}
+
+.flashes .alert {
+  max-width: 960px;
+  margin: 0 auto;
+  margin-bottom: 5px;
+  font-weight: bold;
+  text-align: center;
 }
