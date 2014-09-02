@@ -1,3 +1,4 @@
+import os
 from app import redis
 from .helpers import hash_pass
 
@@ -85,6 +86,23 @@ class BaseModel(object):
         key = '{}:{}'.format(model, _id)
         return redis.hmset(key, fields)
 
+    @classmethod
+    def delete(cls, _id, model=None):
+        """ delete any key from database """
+
+        model = model or cls.model
+        key = '{}:{}'.format(model, _id)
+        return redis.delete(key)
+
+    @classmethod
+    def delete_field(cls, _id, fields, model=None):
+        """ delete fields from hash """
+
+        model = model or cls.model
+        key = '{}:{}'.format(model, _id)
+        print fields
+        return redis.hdel(key, fields)
+
 
 class User(BaseModel):
     model = 'user'
@@ -101,6 +119,12 @@ class User(BaseModel):
         cls.link_id(username, key.split(':')[1])
         return cls.get(key.split(':')[1])
 
+    @classmethod
+    def by_username(cls, username):
+        _id = cls.get_id(username)
+        return cls.get(_id)
 
 class Session(BaseModel):
     model = 'session'
+
+
