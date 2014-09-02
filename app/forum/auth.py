@@ -1,15 +1,9 @@
-from werkzeug.security import generate_password_hash
+import os
+
+from flask import request, session, g
 from werkzeug.security import check_password_hash
 
-from app import redis
-
-
-def hash_pass(password):
-    return generate_password_hash(password, 'pbkdf2:sha256:3000',
-                                  salt_length=8)
-
-def register_user(username, password):
-    pass
+from .models import User
 
 
 def login_user(username, password):
