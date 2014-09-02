@@ -1,5 +1,5 @@
 from app import redis
-from .auth import hash_pass
+from .helpers import hash_pass
 
 
 class Error(Exception):
@@ -13,32 +13,40 @@ class UserExistsError(Error):
 
 class BaseModel(object):
 
-    @classmethod
-    def _create_id(cls, model=None):
-        """key = model:id"""
+    @staticmethod
+    def _gen_id():
+        """ generate incremental id for every call """
 
-        return '{}:{}'.format(model or cls.model, redis.incr('next_user_id'))
+        return redis.incr('next_id')
 
     @classmethod
-    def _field_value_exists(cls, field, value):
+    def _gen_key(cls, model=None):
+        """generate key, model:id"""
+
+        return '{}:{}'.format(model or cls.model, cls._gen_id())
+
+    @classmethod
+    def _field_value_exists(cls, field, value, model=None):
         """
         check if value in -> key model:field
         used to store values where no fields can have the
         same values.
         """
 
-        key = '{}:{}s'.format(cls.model, field)
+        model = model or cls.model
+        key = '{}:{}s'.format(model, field)
         return redis.sismember(key, value)
 
     @classmethod
-    def _field_value_add(cls, field, value):
+    def _field_sadd(cls, field, value, model=None):
         """
         set value to -> key model:field
         used to store values where no fields can have the
         same values.
         """
 
-        key = '{}:{}s'.format(cls.model, field)
+        model = model or cls.model
+        key = '{}:{}s'.format(model, field)
         return redis.sadd(key, value)
 
     @classmethod
@@ -57,6 +65,26 @@ class BaseModel(object):
         key = '{}:{}s'.format(model, model)
         return redis.hget(key, field)
 
+    @classmethod
+    def get(cls, _id, model=None):
+        """ get hash object by id """
+
+        model = model or cls.model
+        key = '{}:{}'.format(model, _id)
+        obj = redis.hgetall(key)
+        if obj:
+            obj['id'] = _id
+            return obj
+        return None
+
+    @classmethod
+    def set(cls, _id, model=None, **fields):
+        """ set hash fields """
+
+        model = model or cls.model
+        key = '{}:{}'.format(model, _id)
+        return redis.hmset(key, fields)
+
 
 class User(BaseModel):
     model = 'user'
@@ -66,20 +94,13 @@ class User(BaseModel):
         if cls.get_id(username):
             raise UserExistsError()
 
-        key = cls._create_id()
+        key = cls._gen_key()
         redis.hmset(key, {'username': username,
                           'password': hash_pass(password)})
 
         cls.link_id(username, key.split(':')[1])
         return cls.get(key.split(':')[1])
 
-    @classmethod
-    def get(cls, _id):
-        """ get object by id """
 
-        key = '{}:{}'.format(cls.model, _id)
-        obj = redis.hgetall(key)
-        if obj:
-            obj['id'] = _id
-            return obj
-        return None
+class Session(BaseModel):
+    model = 'session'
