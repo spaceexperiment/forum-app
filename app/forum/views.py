@@ -20,13 +20,23 @@ def index():
     return render_template('forum.html')
 
 
+@forum.route('/<category>/create/')
+def create_tread():
+    return render_template('create_tread.html')
+
+
+@forum.route('/<category>/<thread>/create/')
+def create_post():
+    return render_template('create_post.html')
+
+
 @forum.route('/user')
 def user():
     form = RegisterForm()
     return render_template('user.html', form=form)
 
 
-@forum.route('/login', methods=['GET', 'POST'])
+@forum.route('/login/', methods=['GET', 'POST'])
 def login():
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
@@ -54,7 +64,7 @@ def login():
     return render_template('login.html', form=form)
 
 
-@forum.route('/logout')
+@forum.route('/logout/')
 def logout():
     session_key = session.get('s_key', None)
     if session_key:
