@@ -3,10 +3,16 @@ from flask import Blueprint, request, session, g, redirect, url_for, abort, \
 
 from .models import User, Session, UserExistsError
 from .forms import RegisterForm
-from .auth import login_user, logout_user
+from .auth import login_user, logout_user, is_logged_in
 
 
 forum = Blueprint('forum', __name__)
+
+
+@forum.before_request
+def before_request():
+    user = is_logged_in()
+    g.user = user if user else None
 
 
 @forum.route('/')
@@ -33,7 +39,7 @@ def login():
                 form.errors['re-password'] = ['Password does not match']
                 return render_template('login.html', form=form)
             try:
-                user = User.create(username, password)
+                User.create(username, password)
                 flash('Account created', 'success')
                 login_user(username, password)
                 return redirect(url_for('.index'))

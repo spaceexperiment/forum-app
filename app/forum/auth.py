@@ -30,3 +30,13 @@ def logout_user(user):
     if session_key:
         Session.delete(session_key)
         User.delete_field(user['id'], 'session')
+
+
+def is_logged_in():
+    session_key = session.get('s_key')
+    if session_key:
+        sess = Session.get(session_key)
+        user = User.get(sess['user']) if sess else None
+        if user and user.get('session') == session_key:
+            return user
+    return False
