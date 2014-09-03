@@ -12,6 +12,16 @@ class UserExistsError(Error):
         self.msg = 'User already exists'
 
 
+def rkey(cls, _id):
+    """ return redis key string model:id """
+    return '{}:{}'.format(cls.model, _id)
+
+
+def rmkey(cls, _id):
+    """ return redis key for field name, e.g. user:users """
+    return '{}:{}s'.format(cls.model, _id)
+
+
 class BaseModel(object):
 
     @staticmethod
@@ -21,57 +31,52 @@ class BaseModel(object):
         return redis.incr('next_id')
 
     @classmethod
-    def _gen_key(cls, model=None):
+    def _gen_key(cls):
         """generate key, model:id"""
 
-        return '{}:{}'.format(model or cls.model, cls._gen_id())
+        return rkey(cls, cls._gen_id())
 
     @classmethod
-    def _field_value_exists(cls, field, value, model=None):
+    def _field_value_exists(cls, field, value):
         """
         check if value in -> key model:field
         used to store values where no fields can have the
         same values.
         """
 
-        model = model or cls.model
-        key = '{}:{}s'.format(model, field)
+        key = rmkey(cls, field)
         return redis.sismember(key, value)
 
     @classmethod
-    def _field_sadd(cls, field, value, model=None):
+    def _field_sadd(cls, field, value):
         """
         set value to -> key model:field
         used to store values where no fields can have the
         same values.
         """
 
-        model = model or cls.model
-        key = '{}:{}s'.format(model, field)
+        key = rmkey(cls, field)
         return redis.sadd(key, value)
 
     @classmethod
-    def link_id(cls, field, _id, model=None):
+    def link_id(cls, field, _id):
         """link a model field to id"""
 
-        model = model or cls.model
-        key = '{}:{}s'.format(model, model)
+        key = rmkey(cls, cls.model)
         redis.hset(key, field, _id)
 
     @classmethod
-    def get_id(cls, field, model=None):
+    def get_id(cls, field):
         """ get id based on a model's field value """
 
-        model = model or cls.model
-        key = '{}:{}s'.format(model, model)
+        key = rmkey(cls, cls.model)
         return redis.hget(key, field)
 
     @classmethod
-    def get(cls, _id, model=None):
+    def get(cls, _id):
         """ get hash object by id """
 
-        model = model or cls.model
-        key = '{}:{}'.format(model, _id)
+        key = rkey(cls, _id)
         obj = redis.hgetall(key)
         if obj:
             obj['id'] = _id
@@ -79,28 +84,24 @@ class BaseModel(object):
         return None
 
     @classmethod
-    def set(cls, _id, model=None, **fields):
+    def set(cls, _id, **fields):
         """ set hash fields """
 
-        model = model or cls.model
-        key = '{}:{}'.format(model, _id)
+        key = rkey(cls, _id)
         return redis.hmset(key, fields)
 
     @classmethod
-    def delete(cls, _id, model=None):
+    def delete(cls, _id):
         """ delete any key from database """
 
-        model = model or cls.model
-        key = '{}:{}'.format(model, _id)
+        key = rkey(cls, _id)
         return redis.delete(key)
 
     @classmethod
-    def delete_field(cls, _id, fields, model=None):
+    def delete_field(cls, _id, fields):
         """ delete fields from hash """
 
-        model = model or cls.model
-        key = '{}:{}'.format(model, _id)
-        print fields
+        key = rkey(cls, _id)
         return redis.hdel(key, fields)
 
 
