@@ -8,14 +8,15 @@ from . import models
 
 redis = fakeredis.FakeStrictRedis()
 
+
+class Model(models.BaseModel):
+    model = 'model'
+
+
 class ModelTestCase(unittest.TestCase):
     def setUp(self):
         self.patcher = mock.patch('app.forum.models.redis', redis)
         self.patcher.start()
-
-        class Model(models.BaseModel):
-            model = 'model'
-
         self.model = Model()
 
     def tearDown(self):
@@ -54,11 +55,15 @@ class ModelTestCase(unittest.TestCase):
     def test_set_hash_fields(self):
         """ sets multi hash {field: value}"""
 
-        key = 'model:1'
         values = {'test1': 'value1', 'test2': 'value2'}
+        self.model.set('6', **values)
 
-        self.model.set('1', **values)
+        key = 'model:6'
         assert redis.hgetall(key) == values
+
+        # assert if id 6 in 'model:all set'
+        assert '6' in redis.smembers('model:all')
+        assert '7' not in redis.smembers('model:all')
 
     def test_get_hash_fields(self):
         values = {'test1': 'value1', 'test2': 'value2'}
@@ -71,7 +76,7 @@ class ModelTestCase(unittest.TestCase):
 
     def test_field_sadd(self):
 
-        key = 'model:fields'
+        key = 'model:field'
         value = 'value'
 
         self.model._field_sadd('field', value)
@@ -93,6 +98,39 @@ class ModelTestCase(unittest.TestCase):
         self.model.link_id('my_name', _id)
         assert redis.hget(key, 'my_name') == _id
         assert not redis.hget(key, 'obf_name') == _id
+
+    def test_delete(self):
+        key = 'model:4'
+        self.model.set('4', test='test')
+
+        assert redis.hexists(key, 'test')
+        assert '4' in redis.smembers('model:all')
+
+        self.model.delete('4')
+
+        assert not redis.hexists(key, 'test')
+        assert not '4' in redis.smembers('model:all')
+
+    def test_delete_field(self):
+        key = 'model:4'
+        self.model.set('4', test='test', test2='test2')
+
+        assert redis.hexists(key, 'test')
+
+        self.model.delete_field('4', 'test')
+
+        assert not redis.hexists(key, 'test')
+        assert redis.hexists(key, 'test2')
+
+    def test_all(self):
+        key = 'model:all'
+
+        redis.sadd(key, 1, 2, 3)
+        assert '2' in redis.smembers('model:all')
+
+        assert '2' in self.model.all()
+        assert '3' in self.model.all()
+
 
 
 # class UserTestCase(unittest.TestCase):

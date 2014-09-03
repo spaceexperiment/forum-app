@@ -51,11 +51,11 @@ class BaseModel(object):
     def _field_sadd(cls, field, value):
         """
         set value to -> key model:field
-        used to store values where no fields can have the
+        also used to store values where no fields can have the
         same values.
         """
 
-        key = rmkey(cls, field)
+        key = rkey(cls, field)
         return redis.sadd(key, value)
 
     @classmethod
@@ -88,12 +88,18 @@ class BaseModel(object):
         """ set hash fields """
 
         key = rkey(cls, _id)
+        # add id to model:all set
+        cls._field_sadd('all', _id)
+
         return redis.hmset(key, fields)
 
     @classmethod
     def delete(cls, _id):
         """ delete any key from database """
 
+        # remove id from model:all set
+        redis.srem(rkey(cls, 'all'), _id)
+        
         key = rkey(cls, _id)
         return redis.delete(key)
 
@@ -103,6 +109,12 @@ class BaseModel(object):
 
         key = rkey(cls, _id)
         return redis.hdel(key, fields)
+
+    @classmethod
+    def all(cls):
+        """ return id set for key model:all """
+
+        return redis.smembers(rkey(cls, 'all'))
 
 
 class User(BaseModel):
@@ -125,7 +137,22 @@ class User(BaseModel):
         _id = cls.get_id(username)
         return cls.get(_id)
 
+
 class Session(BaseModel):
     model = 'session'
 
 
+class Thread(BaseModel):
+    model = 'thread'
+
+    def __init__(self, user_id):
+        self.uid = user_id
+
+    def create(self, title, body):
+        _id = self._gen_id()
+        # save data
+        self.set(_id, user=self.uid, title=title, body=body)
+
+        # set thread ids in 'user:id:threads'
+        key = '{}:threads'.format(self.uid)
+        User._field_sadd(key, _id)
