@@ -11,3 +11,14 @@
 	{% endif %}
 
 {%- endmacro %}
+
+
+{% macro js(file_name) -%}
+	<script src="{{ url_for('static', filename='js/'+file_name) }}"></script>
+{%- endmacro %}
+
+
+{% macro css(file_name) -%}
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static',
+													filename='css/'+file_name)}}">
+{%- endmacro %}
