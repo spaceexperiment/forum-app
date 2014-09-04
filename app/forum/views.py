@@ -4,7 +4,7 @@ from flask import Blueprint, request, session, g, redirect, url_for, abort, \
 from .models import User, Session, Thread, UserExistsError
 from .forms import RegisterForm, ThreadForm
 from .auth import auth, login_user, logout_user, is_logged_in
-
+from .helpers import is_complete_tags
 
 forum = Blueprint('forum', __name__)
 
@@ -38,10 +38,14 @@ def thread(sub, thread):
 def create_thread(sub):
     form = ThreadForm(request.form)
     if request.method == 'POST' and form.validate():
-        thread = Thread(user_id=g.user['id'])
-        thread.create(title=form.title.data, body=form.body.data)
-        flash('Thread Created successfully', 'success')
-        return redirect(url_for('.index'))
+        if not is_complete_tags(form.body.data):
+            flash('There was an error parsing body\'s text html tags',
+                  'danger')
+        else:
+            thread = Thread(user_id=g.user['id'])
+            thread.create(title=form.title.data, body=form.body.data)
+            flash('Thread Created successfully', 'success')
+            return redirect(url_for('.index'))
     return render_template('create_thread.html', form=form, sub=sub)
 
 
