@@ -11,7 +11,14 @@ input[type='text'] {
   width: 100%;
 }
 
+.trumbowyg-box, .trumbowyg-editor {
+  margin: 0;
+  width: 100%;
+  color: black;
+  background: white;
+}
+
 textarea {
   margin-top: 10px;
-  min-height: 200px;
+  background: white;
 }

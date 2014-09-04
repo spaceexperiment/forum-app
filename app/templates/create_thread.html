@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static',
-												filename='css/create_thread.css') }}">
-<title>Forum ~ user</title>
+	<link rel="stylesheet" type="text/css" href="{{url_for('static',
+												   filename='js/vendor/trumbowyg.min.css') }}">
+	{{ macros.css('create_thread.css') }}
+	<title>Forum ~ user</title>
 {% endblock %}
 
 
@@ -34,9 +35,14 @@
 		</div>
 
 
+	 <!-- <div id="editor"></div> -->
+
 	</form>
 
 </div>
+{% endblock %}
 
-
+{% block foot %}
+	{{ macros.js('vendor/trumbowyg.min.js') }}
+	{{ macros.js('create_thread.js') }}
 {% endblock %}
