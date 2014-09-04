@@ -1,9 +1,9 @@
-.thread .list-group-item h4 span {
+.sub .list-group-item h4 span {
   font-size: 0.8em;
   padding-left: 15px;
   padding-right: 15px;
 }
-.thread .list-group-item h4 span + span {
+.sub .list-group-item h4 span + span {
   border-right: 2px solid #848e97;
 }
 
@@ -11,6 +11,6 @@
   margin-top: 60px;
 }
 
-.thread .list-group-item + .list-group-item {
+.sub .list-group-item + .list-group-item {
   margin-top: 20px;
 }
