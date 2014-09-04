@@ -1,9 +1,9 @@
 from flask import Blueprint, request, session, g, redirect, url_for, abort, \
                   render_template, flash
 
-from .models import User, Session, UserExistsError
-from .forms import RegisterForm
-from .auth import login_user, logout_user, is_logged_in
+from .models import User, Session, Thread, UserExistsError
+from .forms import RegisterForm, ThreadForm
+from .auth import auth, login_user, logout_user, is_logged_in
 
 
 forum = Blueprint('forum', __name__)
@@ -19,13 +19,34 @@ def index():
     return render_template('forum.html')
 
 
-@forum.route('/<category>/create/')
-def create_tread():
-    return render_template('create_tread.html')
+@forum.route('/<sub>/')
+def sub(sub):
+    return render_template('sub.html', sub=sub)
 
 
-@forum.route('/<category>/<thread>/create/')
-def create_post():
+@forum.route('/<sub>/<string:thread>')
+def thread(sub, thread):
+    thread = Thread.get(thread)
+    print thread
+    if not thread:
+        return redirect(url_for('.sub', sub=sub))
+    return render_template('thread.html', sub=sub, thread=thread)
+
+
+@forum.route('/<sub>/create/', methods=['GET', 'POST'])
+@auth
+def create_thread(sub):
+    form = ThreadForm(request.form)
+    if request.method == 'POST' and form.validate():
+        thread = Thread(user_id=g.user['id'])
+        thread.create(title=form.title.data, body=form.body.data)
+        flash('Thread Created successfully', 'success')
+        return redirect(url_for('.index'))
+    return render_template('create_thread.html', form=form, sub=sub)
+
+
+@forum.route('/<sub>/<thread>/post/')
+def create_post(sub, thread):
     return render_template('create_post.html')
 
 
