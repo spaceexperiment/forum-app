@@ -25,9 +25,9 @@ def sub(sub):
 
 
 @forum.route('/<sub>/<string:thread>')
+@auth
 def thread(sub, thread):
     thread = Thread.get(thread)
-    print thread
     if not thread:
         return redirect(url_for('.sub', sub=sub))
     return render_template('thread.html', sub=sub, thread=thread)
