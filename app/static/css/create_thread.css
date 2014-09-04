@@ -1,0 +1,17 @@
+label {
+  font-size: 1.7em;
+}
+
+input[type='text'] {
+  height: 50px;
+  margin-bottom: 10px;
+}
+
+.btn {
+  width: 100%;
+}
+
+textarea {
+  margin-top: 10px;
+  min-height: 200px;
+}
