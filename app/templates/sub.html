@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Forum ~ main</title>
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/forum.css')}}">
+{% endblock %}
+
+
+{% block body %}
+
+	<div class="sub">
+	 	<div class="page-header">
+		 	<h1>{{ sub }}</h1>
+	 	</div>
+
+	 	<div class="list-group">
+			<a href="#" class="list-group-item">
+			    <h4 class="list-group-item-heading">
+			    	Thread on saving the world
+			    	<span class="pull-right hidden-xs">threads: 43</span>
+			    	<span class="pull-right hidden-xs">last active: 12 september</span>
+		    	</h4>
+		    	<p class="list-group-item-text">some description here maand asldnasdnasd</p>
+			</a>
+			<a href="#" class="list-group-item">
+			    <h4 class="list-group-item-heading">
+			    	Thread on saving the world
+			    	<span class="pull-right hidden-xs">threads: 43</span>
+			    	<span class="pull-right hidden-xs">last active: 12 september</span>
+		    	</h4>
+			</a>
+			<a href="#" class="list-group-item">
+			    <h4 class="list-group-item-heading">
+			    	Thread on saving the world
+			    	<span class="pull-right hidden-xs">threads: 43</span>
+			    	<span class="pull-right hidden-xs">last active: 12 september</span>
+		    	</h4>
+			</a>
+		</div>
+
+	</div>
+
+
+
+{% endblock %}
