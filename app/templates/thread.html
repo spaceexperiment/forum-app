@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Forum ~ main</title>
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/thread.css')}}">
+{% endblock %}
+
+
+{% block body %}
+
+	<div class="thread">
+	 	<div class="page-header">
+		 	<h1>{{ thread['title'] }}</h1>
+	 	</div>
+
+	 	<div class="post">
+		 	<div class="user col-sm-2">
+		 		<div class="image"></div>
+		 		<p>jibreel</p>
+		 		<p>date: 12 august</p>
+		 	</div>
+		 	<div class="post-body col-sm-10">
+		 		{{ thread['body'] }}
+		 	</div>
+		 		
+	 	</div>
+
+	</div>
+
+
+
+{% endblock %}

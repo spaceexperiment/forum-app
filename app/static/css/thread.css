@@ -1,0 +1,11 @@
+.thread .post .user {
+  height: 200px;
+}
+.thread .post .user .image {
+  height: 100px;
+  display: block;
+}
+.thread .post .post-body {
+  background: #4e5d6c;
+  min-height: 200px;
+}
