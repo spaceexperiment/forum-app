@@ -10,7 +10,7 @@ from .models import User, Session
 
 def _login_user(user):
         session_key = b64encode(os.urandom(20))
-        # set uid in session:key
+        # set uid in user field in session:key
         Session.set(session_key, user=user['id'])
         # set session key in user object
         User.set(user['id'], session=session_key)
