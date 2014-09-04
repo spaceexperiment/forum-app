@@ -156,3 +156,7 @@ class Thread(BaseModel):
         # set thread ids in 'user:id:threads'
         key = '{}:threads'.format(self.uid)
         User._field_sadd(key, _id)
+
+    def user_threads(self):
+        key = 'user:{}:threads'.format(self.uid)
+        return redis.smembers(key)
