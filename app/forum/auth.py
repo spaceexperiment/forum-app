@@ -39,4 +39,4 @@ def is_logged_in():
         user = User.get(sess['user']) if sess else None
         if user and user.get('session') == session_key:
             return user
-    return False
+    return None

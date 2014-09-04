@@ -11,8 +11,7 @@ forum = Blueprint('forum', __name__)
 
 @forum.before_request
 def before_request():
-    user = is_logged_in()
-    g.user = user if user else None
+    g.user = is_logged_in()
 
 
 @forum.route('/')
