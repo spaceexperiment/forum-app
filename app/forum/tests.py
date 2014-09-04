@@ -6,17 +6,18 @@ import fakeredis
 from . import models
 
 
+# global fakeredis patch
 redis = fakeredis.FakeStrictRedis()
+patcher = mock.patch('app.forum.models.redis', redis)
+patcher.start()
 
 
 class Model(models.BaseModel):
     model = 'model'
 
 
-class ModelTestCase(unittest.TestCase):
+class BaseModelTestCase(unittest.TestCase):
     def setUp(self):
-        self.patcher = mock.patch('app.forum.models.redis', redis)
-        self.patcher.start()
         self.model = Model()
 
     def tearDown(self):
@@ -132,16 +133,42 @@ class ModelTestCase(unittest.TestCase):
         assert '3' in self.model.all()
 
 
+class OtherModelsTestCase(unittest.TestCase):
 
-# class UserTestCase(unittest.TestCase):
+    def setUp(self):
+        pass
 
-#     def setUp(self):
-#         pass
-#     def tearDown(self):
-#         pass
+    def tearDown(self):
+        # delete databases
+        fakeredis.DATABASES = {}
 
-#     def test_create_account(self):
-#         pass
+    def test_user_create_account(self):
+        pass
 
-#     def test_login_account(self):
-#         pass
+    def test_get_user_by_username(self):
+        pass
+
+    def test_create_thread(self):
+        pass
+
+    def test_get_user_threads(self):
+        pass
+
+
+class UserTestCase(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        # delete databases
+        fakeredis.DATABASES = {}
+
+    def test_login(self):
+        pass
+
+    def test_logout(self):
+        pass
+
+    def test_signup(self):
+        pass
