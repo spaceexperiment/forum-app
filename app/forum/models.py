@@ -28,7 +28,7 @@ class BaseModel(object):
     def _gen_id():
         """ generate incremental id for every call """
 
-        return redis.incr('next_id')
+        return str(redis.incr('next_id'))
 
     @classmethod
     def _gen_key(cls):
@@ -125,12 +125,11 @@ class User(BaseModel):
         if cls.get_id(username):
             raise UserExistsError()
 
-        key = cls._gen_key()
-        redis.hmset(key, {'username': username,
-                          'password': hash_pass(password)})
+        _id = cls._gen_id()
+        cls.set(_id, username=username, password=hash_pass(password))
 
-        cls.link_id(username, key.split(':')[1])
-        return cls.get(key.split(':')[1])
+        cls.link_id(username, _id)
+        return cls.get(_id)
 
     @classmethod
     def by_username(cls, username):

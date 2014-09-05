@@ -2,8 +2,11 @@ import unittest
 import mock
 
 import fakeredis
+from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash
 
 from . import models
+from .helpers import hash_pass
 
 
 # global fakeredis patch
@@ -133,7 +136,7 @@ class BaseModelTestCase(unittest.TestCase):
         assert '3' in self.model.all()
 
 
-class OtherModelsTestCase(unittest.TestCase):
+class UserModelsTestCase(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -143,10 +146,64 @@ class OtherModelsTestCase(unittest.TestCase):
         redis.flushdb()
 
     def test_user_create_account(self):
-        pass
+        _id = '1'
+        assert not models.User.get(_id)
+
+        user = models.User.create('marv', 'pass')
+        assert user
+
+        same_user = models.User.get(_id)
+        assert same_user
+        assert user == same_user
+
+        # all keys exists
+        assert ['username', 'password', 'id'] == user.keys()
+        # username and id values exists
+        assert 'marv' in user.values()
+        assert _id in user.values()
+        # id in key user:all
+        assert _id in models.User.all()
+
+        # create another user, this should have id=2
+        user = models.User.create('marv2', 'pass')
+        assert user['id'] == '2'
+        assert '2' in models.User.all()
+
+    def test_user_exists(self):
+        user = models.User.create('marv', 'pass')
+        self.assertRaises(models.UserExistsError,
+                          models.User.create, 'marv', 'pass')
+
+    def test_hash_pass_function(self):
+        password ='test_pass'
+        hpass = hash_pass(password)
+        assert check_password_hash(hpass, password)
+
+    def test_user_hash_password(self):
+        _id = '1'
+        user = models.User.create('marv', 'pass')
+        hpass = user['password'] 
+        assert check_password_hash(hpass, 'pass')
+
 
     def test_get_user_by_username(self):
+        user = models.User.create('marv', 'pass')
+        assert models.User.by_username('marv')
+        assert not models.User.by_username('wrong_name')
+        
+        user = models.User.create('marv2', 'pass')
+        assert models.User.by_username('marv2')
+        assert not models.User.by_username('wrong_name')
+
+
+class ThreadModelsTestCase(unittest.TestCase):
+
+    def setUp(self):
         pass
+
+    def tearDown(self):
+        # delete databases
+        redis.flushdb()
 
     def test_create_thread(self):
         pass
@@ -154,21 +211,3 @@ class OtherModelsTestCase(unittest.TestCase):
     def test_get_user_threads(self):
         pass
 
-
-class UserTestCase(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        # delete databases
-        fakeredis.DATABASES = {}
-
-    def test_login(self):
-        pass
-
-    def test_logout(self):
-        pass
-
-    def test_signup(self):
-        pass
