@@ -22,7 +22,7 @@ class BaseModelTestCase(unittest.TestCase):
 
     def tearDown(self):
         # delete databases
-        fakeredis.DATABASES = {}
+        redis.flushdb()
 
     def test_create_id(self):
         key = self.model._gen_key()
@@ -140,7 +140,7 @@ class OtherModelsTestCase(unittest.TestCase):
 
     def tearDown(self):
         # delete databases
-        fakeredis.DATABASES = {}
+        redis.flushdb()
 
     def test_user_create_account(self):
         pass
