@@ -1,3 +1,6 @@
+.thread .post {
+  background: #4e5d6c;
+}
 .thread .post .user {
   height: 200px;
 }
@@ -8,4 +11,8 @@
 .thread .post .post-body {
   background: #4e5d6c;
   min-height: 200px;
+  padding: 20px;
+  margin: 0;
+  color: white;
+  font-weight: bold;
 }
