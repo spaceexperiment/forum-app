@@ -29,17 +29,6 @@ class BaseModel(object):
         return rkey(cls, cls._gen_id())
 
     @classmethod
-    def _field_value_exists(cls, field, value):
-        """
-        check if value in -> key model:field
-        used to store values where no fields can have the
-        same values.
-        """
-
-        key = rmkey(cls, field)
-        return redis.sismember(key, value)
-
-    @classmethod
     def _field_sadd(cls, field, value):
         """
         set value to -> key model:field
@@ -49,6 +38,24 @@ class BaseModel(object):
 
         key = rkey(cls, field)
         return redis.sadd(key, value)
+
+    @classmethod
+    def _field_values(cls, field):
+        """ return model:field set values """
+
+        key = rkey(cls, field)
+        return redis.smembers(key)
+
+    @classmethod
+    def _field_value_exists(cls, field, value):
+        """
+        check if value in -> key model:field
+        used to store values where no fields can have the
+        same values.
+        """
+
+        key = rkey(cls, field)
+        return redis.sismember(key, value)
 
     @classmethod
     def link_id(cls, field, _id):
@@ -103,10 +110,16 @@ class BaseModel(object):
         return redis.hdel(key, fields)
 
     @classmethod
-    def all(cls):
+    def all_ids(cls):
         """ return id set for key model:all """
 
         return redis.smembers(rkey(cls, 'all'))
+
+    @classmethod
+    def all(cls):
+        """ return all objects for any given model """
+
+        return [cls.get(_id) for _id in cls.all_ids()]
 
 
 class User(BaseModel):
@@ -115,7 +128,7 @@ class User(BaseModel):
     @classmethod
     def create(cls, username, password):
         if cls.get_id(username):
-            raise UserExistsError()
+            raise UserExistsError
 
         _id = cls._gen_id()
         cls.set(_id, username=username, password=hash_pass(password))
@@ -131,6 +144,66 @@ class User(BaseModel):
 
 class Session(BaseModel):
     model = 'session'
+
+
+class Category(BaseModel):
+    model = 'category'
+
+    def __init__(self, _id=None):
+        self.category = self.get(_id)
+
+    @classmethod
+    def create(cls, title):
+        if cls.get_id(title):
+            raise CategoryExistsError
+
+        _id = cls._gen_id()
+        category = cls.set(_id, title=title)
+
+        cls.link_id(title, _id)
+        return cls.get(_id)
+
+    def create_sub(self, title, description=''):
+        """ create sub for this category instance """
+
+        return Sub.create(self.category, title, description)
+
+    def subs(self):
+        """ return all subs for this category """
+
+        key = '{}:subs'.format(self.category['id'])
+        sub_ids = self._field_values(key)
+        return [Sub.get(_id) for _id in self._field_values(key)]
+
+
+class Sub(BaseModel):
+    model = 'sub'
+
+    @classmethod
+    def create(cls, category, title, description=''):
+        if cls.get_id(title):
+            raise SubExistsError
+
+        _id = cls._gen_id()
+        sub = cls.set(_id, title=title, description=description,
+                      category=category['id'])
+
+        key = 'category:{}:subs'.format(category['id'])
+        redis.sadd(key, _id)
+
+        cls.link_id(title, _id)
+        return cls.get(_id)
+
+    @classmethod
+    def delete(cls, _id):
+        sub = cls.get(_id)
+        super(Sub, cls).delete(sub['id'])
+
+        # remove sub link from category
+        key = 'category:{}:subs'.format(sub['category'])
+        redis.srem(key, _id)
+        
+
 
 
 class Thread(BaseModel):
