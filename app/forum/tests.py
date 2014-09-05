@@ -7,6 +7,9 @@ from werkzeug.security import check_password_hash
 
 from . import models
 from .helpers import hash_pass
+from .exceptions import UserExistsError, CategoryExistsError, SubExistsError, \
+                        ThreadExistsError
+
 
 
 # global fakeredis patch
@@ -171,8 +174,7 @@ class UserModelsTestCase(unittest.TestCase):
 
     def test_user_exists(self):
         user = models.User.create('marv', 'pass')
-        self.assertRaises(models.UserExistsError,
-                          models.User.create, 'marv', 'pass')
+        self.assertRaises(UserExistsError, models.User.create, 'marv', 'pass')
 
     def test_hash_pass_function(self):
         password ='test_pass'

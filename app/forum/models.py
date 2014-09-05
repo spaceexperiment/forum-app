@@ -1,15 +1,7 @@
-import os
 from app import redis
 from .helpers import hash_pass
-
-
-class Error(Exception):
-    pass
-
-
-class UserExistsError(Error):
-    def __init__(self):
-        self.msg = 'User already exists'
+from .exceptions import UserExistsError, CategoryExistsError, SubExistsError, \
+                        ThreadExistsError
 
 
 def rkey(cls, _id):
