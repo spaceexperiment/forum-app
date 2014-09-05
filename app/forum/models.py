@@ -98,7 +98,7 @@ class BaseModel(object):
 
         # remove id from model:all set
         redis.srem(rkey(cls, 'all'), _id)
-        
+
         key = rkey(cls, _id)
         return redis.delete(key)
 
@@ -172,7 +172,6 @@ class Category(BaseModel):
         """ return all subs for this category """
 
         key = '{}:subs'.format(self.category['id'])
-        sub_ids = self._field_values(key)
         return [Sub.get(_id) for _id in self._field_values(key)]
 
 
@@ -202,8 +201,6 @@ class Sub(BaseModel):
         # remove sub link from category
         key = 'category:{}:subs'.format(sub['category'])
         redis.srem(key, _id)
-        
-
 
 
 class Thread(BaseModel):
