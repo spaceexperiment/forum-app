@@ -59,10 +59,22 @@ class BaseModel(object):
 
     @classmethod
     def link_id(cls, field, _id):
-        """link a model field to id"""
+        """
+        link a model field to id, model:models field=_id
+            where field is the value of a model field
+        """
 
         key = rmkey(cls, cls.model)
         redis.hset(key, field, _id)
+
+    @classmethod
+    def _link_id_change(cls, old_field, new_field):
+        """ change the key hash for for model:models """
+
+        key = rmkey(cls, cls.model)
+        _id = redis.hget(key, old_field)
+        redis.hdel(key, old_field)
+        redis.hset(key, new_field, _id)
 
     @classmethod
     def get_id(cls, field):
@@ -91,6 +103,21 @@ class BaseModel(object):
         cls._field_sadd('all', _id)
 
         return redis.hmset(key, fields)
+
+    @classmethod
+    def edit(cls, _id, linked=None, **fields):
+        """
+        Edit hash fields, if field linked to id, then delete
+            and recreate with new key to link_id,
+        """
+
+        if linked:
+            old_field = cls.get(_id)[linked]
+            new_field = fields[linked]
+            cls._link_id_change(old_field, new_field)
+            
+        return cls.set(_id, **fields)
+
 
     @classmethod
     def delete(cls, _id):

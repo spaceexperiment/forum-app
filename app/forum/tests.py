@@ -67,6 +67,32 @@ class BaseModelTestCase(unittest.TestCase):
         assert '6' in redis.smembers('model:all')
         assert '7' not in redis.smembers('model:all')
 
+    def test_edit_hash_fields(self):
+        key = 'model:6'
+        values = {'test1': 'value1', 'test2': 'value2'}
+        self.model.set('6', **values)
+        assert redis.hgetall(key) == values
+        
+        new_value = {'test1': 'value1', 'test2':'value9'}
+        self.model.edit('6', test2='value9')
+        assert redis.hgetall(key) == new_value
+
+    def test_edit_hash_fields_linked(self):
+        key = 'model:6'
+        values = {'test1': 'value1', 'test2': 'value2'}
+        self.model.set('6', **values)
+        assert redis.hgetall(key) == values
+        
+        self.model.link_id('value1', '6')
+        assert self.model.get_id('value1') == '6'
+        new_value = {'test1': 'val3', 'test2':'value9'}
+        self.model.edit('6', linked='test1', test1='val3', test2='value9')
+        assert redis.hgetall(key) == new_value, redis.hgetall(key)
+        assert not self.model.get_id('value1') == '6'
+        assert self.model.get_id('val3') == '6'
+
+
+
     def test_get_hash_fields(self):
         values = {'test1': 'value1', 'test2': 'value2'}
         self.model.set('1', **values)
@@ -98,6 +124,18 @@ class BaseModelTestCase(unittest.TestCase):
         assert redis.hget(key, 'my_name') == _id
         assert not redis.hget(key, 'obf_name') == _id
 
+    def test_link_id_change(self):
+        key = 'model:models'
+        _id = '8'
+        field = 'my name'
+        self.model.link_id(field, _id)
+        assert redis.hexists(key, field)
+        self.model._link_id_change(old_field='my name', new_field='new name')
+        assert not redis.hexists(key, field)
+        assert redis.hexists(key, 'new name')
+        assert _id == redis.hget(key, 'new name')
+
+
     def test_delete(self):
         key = 'model:4'
         self.model.set('4', test='test')
@@ -120,13 +158,21 @@ class BaseModelTestCase(unittest.TestCase):
     def test_all_ids(self):
         key = 'model:all'
         redis.sadd(key, 1, 2, 3)
-        assert '2' in redis.smembers('model:all')
+        assert '2' in redis.smembers(key)
         assert '2' in self.model.all_ids()
         assert '3' in self.model.all_ids()
 
     def test_all(self):
         key = 'model:all'
-        pass
+        self.model.set('2', val='asd')
+        self.model.set('5', val='asd')
+        self.model.set('233', val='asd')
+        assert '5' in redis.smembers(key)
+
+        _all = ['2', '5', '233']
+        for obj in self.model.all():
+            assert obj['id'] in _all
+            _all.remove(obj['id'])
 
 
 class UserModelsTestCase(unittest.TestCase):
