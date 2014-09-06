@@ -106,6 +106,16 @@ class BaseModelTestCase(unittest.TestCase):
         self.model._field_sadd('field', value)
         assert redis.smembers(key) == set([value])
 
+    def test_field_srem(self):
+        key = 'model:field'
+        value = 'value'
+        self.model._field_sadd('field', value)
+        assert redis.smembers(key) == set([value])
+        self.model._field_srem('field', value)
+        assert not redis.smembers(key) == set([value])
+
+
+
     def test_field_value_exists(self):
         redis.sadd('model:names', 'value')
 

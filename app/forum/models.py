@@ -40,6 +40,15 @@ class BaseModel(object):
         return redis.sadd(key, value)
 
     @classmethod
+    def _field_srem(cls, field, value):
+        """
+        remove value from -> key model:field
+        """
+
+        key = rkey(cls, field)
+        return redis.srem(key, value)
+
+    @classmethod
     def _field_values(cls, field):
         """ return model:field set values """
 
