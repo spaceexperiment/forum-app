@@ -72,8 +72,8 @@ class BaseModelTestCase(unittest.TestCase):
         values = {'test1': 'value1', 'test2': 'value2'}
         self.model.set('6', **values)
         assert redis.hgetall(key) == values
-        
-        new_value = {'test1': 'value1', 'test2':'value9'}
+
+        new_value = {'test1': 'value1', 'test2': 'value9'}
         self.model.edit('6', test2='value9')
         assert redis.hgetall(key) == new_value
 
@@ -82,16 +82,14 @@ class BaseModelTestCase(unittest.TestCase):
         values = {'test1': 'value1', 'test2': 'value2'}
         self.model.set('6', **values)
         assert redis.hgetall(key) == values
-        
+
         self.model.link_id('value1', '6')
         assert self.model.get_id('value1') == '6'
-        new_value = {'test1': 'val3', 'test2':'value9'}
+        new_value = {'test1': 'val3', 'test2': 'value9'}
         self.model.edit('6', linked='test1', test1='val3', test2='value9')
         assert redis.hgetall(key) == new_value, redis.hgetall(key)
         assert not self.model.get_id('value1') == '6'
         assert self.model.get_id('val3') == '6'
-
-
 
     def test_get_hash_fields(self):
         values = {'test1': 'value1', 'test2': 'value2'}
@@ -113,8 +111,6 @@ class BaseModelTestCase(unittest.TestCase):
         assert redis.smembers(key) == set([value])
         self.model._field_srem('field', value)
         assert not redis.smembers(key) == set([value])
-
-
 
     def test_field_value_exists(self):
         redis.sadd('model:names', 'value')
@@ -144,7 +140,6 @@ class BaseModelTestCase(unittest.TestCase):
         assert not redis.hexists(key, field)
         assert redis.hexists(key, 'new name')
         assert _id == redis.hget(key, 'new name')
-
 
     def test_delete(self):
         key = 'model:4'
@@ -267,14 +262,46 @@ class CategoryModelsTestCase(unittest.TestCase):
         title = 'category name'
         category = models.Category.create(title)
         assert category
-        # creat it again with same title
+        # create it again with same title
         self.assertRaises(CategoryExistsError, models.Category.create, title)
 
+    def test_get_all_categories(self):
+        cat1 = models.Category.create('category name1')
+        cat2 = models.Category.create('category name2')
+        cat3 = models.Category.create('category name3')
+        assert cat1 in models.Category.all()
+        assert cat2 in models.Category.all()
+        assert cat3 in models.Category.all()
+        assert len(models.Category.all()) == 3
+
     def test_create_sub(self):
-        pass
+        title = 'sub title'
+        description = 'sub description'
+        category = models.Category.create('category name')
+        category = models.Category(category['id'])
+        sub = category.create_sub(title, description)
+        assert sub['title'] == title
+        assert sub['description'] == description
+        assert sub['category'] == category.category['id']
 
     def test_get_all_subs(self):
-        pass
+        category1 = models.Category.create('category name')
+        category1 = models.Category(category1['id'])
+        sub1 = category1.create_sub('title1', 'description')
+        sub2 = category1.create_sub('title2', 'description')
+        category2 = models.Category.create('category nam2')
+        category2 = models.Category(category2['id'])
+        sub3 = category2.create_sub('title3', 'description')
+        sub4 = category2.create_sub('title4', 'description')
+        assert sub1 in category1.subs()
+        assert sub2 in category1.subs()
+        assert sub3 not in category1.subs()
+        assert sub4 not in category1.subs()
+
+        assert sub1 not in category2.subs()
+        assert sub2 not in category2.subs()
+        assert sub3 in category2.subs()
+        assert sub4 in category2.subs()
 
 
 class SubModelsTestCase(unittest.TestCase):
@@ -311,7 +338,7 @@ class SubModelsTestCase(unittest.TestCase):
         self.assertRaises(models.SubExistsError,
                           models.Sub.create, category, title, description)
 
-    def test_delete(self):
+    def test_delete_sub(self):
         title = 'sub title'
         description = 'sub description'
         category = models.Category.create('category name')
@@ -323,3 +350,20 @@ class SubModelsTestCase(unittest.TestCase):
         models.Sub.delete(sub['id'])
         assert not models.Sub.get(sub['id'])
         assert not redis.sismember(key, sub['id'])
+
+    def test_edit_sub(self):
+        title = 'sub title'
+        description = 'sub description'
+        category = models.Category.create('category name')
+        sub = models.Sub.create(category, title, description)
+        assert sub['title'] == title
+        assert sub['description'] == description
+        assert models.Sub.get_id(title)
+
+        models.Sub.edit(_id=sub['id'], title='title2', description='desc2')
+        sub = models.Sub.get(sub['id'])
+        assert sub['title'] == 'title2'
+        assert sub['description'] == 'desc2'
+        # check if link changed
+        assert not models.Sub.get_id(title)
+        assert models.Sub.get_id('title2')

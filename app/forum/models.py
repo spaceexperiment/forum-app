@@ -120,13 +120,12 @@ class BaseModel(object):
             and recreate with new key to link_id,
         """
 
-        if linked:
+        if linked and linked in fields:
             old_field = cls.get(_id)[linked]
             new_field = fields[linked]
             cls._link_id_change(old_field, new_field)
-            
-        return cls.set(_id, **fields)
 
+        return cls.set(_id, **fields)
 
     @classmethod
     def delete(cls, _id):
@@ -223,8 +222,8 @@ class Sub(BaseModel):
         sub = cls.set(_id, title=title, description=description,
                       category=category['id'])
 
-        key = 'category:{}:subs'.format(category['id'])
-        redis.sadd(key, _id)
+        key = '{}:subs'.format(category['id'])
+        Category._field_sadd(key, _id)
 
         cls.link_id(title, _id)
         return cls.get(_id)
@@ -235,8 +234,12 @@ class Sub(BaseModel):
         super(Sub, cls).delete(sub['id'])
 
         # remove sub link from category
-        key = 'category:{}:subs'.format(sub['category'])
-        redis.srem(key, _id)
+        key = '{}:subs'.format(sub['category'])
+        Category._field_srem(key, _id)
+
+    @classmethod
+    def edit(cls, _id, linked='title', **fields):
+        return super(Sub, cls).edit(_id=_id, linked=linked, **fields)
 
 
 class Thread(BaseModel):
