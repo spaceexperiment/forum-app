@@ -141,6 +141,12 @@ class BaseModelTestCase(unittest.TestCase):
         assert redis.hexists(key, 'new name')
         assert _id == redis.hget(key, 'new name')
 
+    def test_link_id_delete(self):
+        self.model.link_id('test', '2')
+        assert self.model.get_id('test')
+        self.model._link_id_delete('test')
+        assert not self.model.get_id('test')
+
     def test_delete(self):
         key = 'model:4'
         self.model.set('4', test='test')

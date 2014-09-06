@@ -86,6 +86,13 @@ class BaseModel(object):
         redis.hset(key, new_field, _id)
 
     @classmethod
+    def _link_id_delete(cls, field):
+        """ change the key hash for for model:models """
+
+        key = rmkey(cls, cls.model)
+        redis.hdel(key, field)
+
+    @classmethod
     def get_id(cls, field):
         """ get id based on a model's field value """
 
