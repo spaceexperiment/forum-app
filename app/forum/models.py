@@ -179,6 +179,12 @@ class User(BaseModel):
         return cls.get(_id)
 
     @classmethod
+    def edit(cls, _id, linked='username', **fields):
+        if 'password' in fields.keys():
+            fields['password'] = hash_pass(fields['password'])
+        return super(User, cls).edit(_id=_id, linked=linked, **fields)
+
+    @classmethod
     def by_username(cls, username):
         _id = cls.get_id(username)
         return cls.get(_id)
@@ -216,6 +222,12 @@ class Category(BaseModel):
         key = '{}:subs'.format(self.category['id'])
         return [Sub.get(_id) for _id in self._field_values(key)]
 
+    @classmethod
+    def delete(cls, _id):
+        category = cls.get(_id)
+        super(Category, cls).delete(category['id'])
+
+        cls._link_id_delete(category['title'])
 
 class Sub(BaseModel):
     model = 'sub'
@@ -240,6 +252,7 @@ class Sub(BaseModel):
         sub = cls.get(_id)
         super(Sub, cls).delete(sub['id'])
 
+        cls._link_id_delete(sub['title'])
         # remove sub link from category
         key = '{}:subs'.format(sub['category'])
         Category._field_srem(key, _id)
@@ -247,7 +260,6 @@ class Sub(BaseModel):
     @classmethod
     def edit(cls, _id, linked='title', **fields):
         return super(Sub, cls).edit(_id=_id, linked=linked, **fields)
-
 
 class Thread(BaseModel):
     model = 'thread'

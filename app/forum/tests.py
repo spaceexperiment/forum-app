@@ -242,6 +242,16 @@ class UserModelsTestCase(unittest.TestCase):
         assert models.User.by_username('marv2')
         assert not models.User.by_username('wrong_name')
 
+    def test_edit_user(self):
+        user = models.User.create('marv', 'pass')
+        assert check_password_hash(user['password'], 'pass')
+        models.User.edit(user['id'], usernam='marv2', password='pass2')
+        user = models.User.get(user['id'])
+        assert not check_password_hash(user['password'], 'pass')
+        assert check_password_hash(user['password'], 'pass2'), user['password']
+        assert user['username'] == 'marv'
+
+
 
 class CategoryModelsTestCase(unittest.TestCase):
 
@@ -270,6 +280,16 @@ class CategoryModelsTestCase(unittest.TestCase):
         assert category
         # create it again with same title
         self.assertRaises(CategoryExistsError, models.Category.create, title)
+
+    def test_delete_category(self):
+        category = models.Category.create('title')
+        assert category
+        assert models.Category.get_id('title')
+        models.Category.delete(category['id'])
+        assert not models.Category.get(category['id'])
+        assert not '1' in models.Category.all()
+        assert not models.Category.get_id('title')
+
 
     def test_get_all_categories(self):
         cat1 = models.Category.create('category name1')
@@ -356,6 +376,7 @@ class SubModelsTestCase(unittest.TestCase):
         models.Sub.delete(sub['id'])
         assert not models.Sub.get(sub['id'])
         assert not redis.sismember(key, sub['id'])
+        assert not models.Sub.get_id(sub['title'])
 
     def test_edit_sub(self):
         title = 'sub title'
