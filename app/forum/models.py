@@ -285,7 +285,6 @@ class Sub(BaseModel):
             threads.append(Thread.get(thread_id))
         return threads
 
-
     @classmethod
     def edit(cls, _id, linked='title', **fields):
         return super(Sub, cls).edit(_id=_id, linked=linked, **fields)

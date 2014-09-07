@@ -1,6 +1,5 @@
 import unittest
 import mock
-import time
 
 import fakeredis
 from werkzeug.security import generate_password_hash
@@ -253,7 +252,6 @@ class UserModelTestCase(unittest.TestCase):
         assert user.username == 'marv2'
 
 
-
 class CategoryModelTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -290,7 +288,6 @@ class CategoryModelTestCase(unittest.TestCase):
         assert not models.Category.get(category.id)
         assert not '1' in models.Category.all()
         assert not models.Category.get_id('title')
-
 
     def test_get_all_categories(self):
         cat1 = models.Category.create('category name1')
@@ -430,8 +427,6 @@ class SubModelTestCase(unittest.TestCase):
         assert thread3 in models.Sub.get_threads(sub2.id)
         assert thread1 not in models.Sub.get_threads(sub2.id)
         assert thread3 not in models.Sub.get_threads(sub.id)
-
-
 
 
 class ThreadModelTestCase(unittest.TestCase):
