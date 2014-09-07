@@ -198,6 +198,17 @@ class User(BaseModel):
         cls._link_id_delete(user.username)
         return super(User, cls).delete(_id)
 
+    @classmethod
+    def link_thread(cls, user_id, thread_id):
+        key = '{}:threads'.format(user_id)
+        return cls._field_add(key, thread_id)
+
+    @classmethod
+    def unlink_thread(cls, user_id, thread_id):
+        key = '{}:threads'.format(user_id)
+        return cls._field_rem(key, thread_id)
+
+
 
 class Session(BaseModel):
     model = 'session'
@@ -273,7 +284,7 @@ class Sub(BaseModel):
     @classmethod
     def link_thread(cls, sub_id, thread_id):
         key = '{}:threads'.format(sub_id)
-        return Sub._field_add(key, thread_id)
+        return cls._field_add(key, thread_id)
 
     @classmethod
     def unlink_thread(cls, sub_id, thread_id):
@@ -326,4 +337,7 @@ class Thread(BaseModel):
         key = '{}:threads'.format(self.user.id)
         return User._field_values(key)
 
+    def delete(self, _id):
+        unlink_thread(self.sub.id, _id)
+        return 
 

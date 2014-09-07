@@ -259,6 +259,24 @@ class UserModelTestCase(unittest.TestCase):
         # check if remove link for username in user:users
         assert not models.User.by_username(user.username)
 
+    def test_link_thread(self):
+        models.User.link_thread(user_id=1, thread_id='2')
+        models.User.link_thread(user_id=1, thread_id='4')
+        assert '2' in redis.zrange('user:1:threads', 0, -1)
+        assert '4' in redis.zrange('user:1:threads', 0, -1)
+        assert '124' not in redis.zrange('user:1:threads', 0, -1)
+
+    def test_unlink_thread(self):
+        models.User.link_thread(user_id=1, thread_id='2')
+        models.User.link_thread(user_id=1, thread_id='4')
+        assert '2' in redis.zrange('user:1:threads', 0, -1)
+        assert '4' in redis.zrange('user:1:threads', 0, -1)
+        models.User.unlink_thread(user_id=1, thread_id='2')
+        assert '2' not in redis.zrange('user:1:threads', 0, -1)
+        assert '4' in redis.zrange('user:1:threads', 0, -1)
+
+
+
 
 
 class CategoryModelTestCase(unittest.TestCase):
