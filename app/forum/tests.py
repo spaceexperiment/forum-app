@@ -251,6 +251,15 @@ class UserModelTestCase(unittest.TestCase):
         assert check_password_hash(user.password, 'pass2'), user.password
         assert user.username == 'marv2'
 
+    def test_delete_user(self):
+        user = models.User.create('marv', 'pass')
+        assert models.User.by_username(user.username)
+        models.User.delete(user.id)
+        assert not models.User.get(user.id)
+        # check if remove link for username in user:users
+        assert not models.User.by_username(user.username)
+
+
 
 class CategoryModelTestCase(unittest.TestCase):
 

@@ -90,7 +90,7 @@ class BaseModel(object):
 
     @classmethod
     def _link_id_delete(cls, field):
-        """ change the key hash for for model:models """
+        """ delete the key hash for for model:models """
 
         key = rmkey(cls, cls.model)
         redis.hdel(key, field)
@@ -143,7 +143,6 @@ class BaseModel(object):
 
         # remove id from model:all set
         cls._field_rem('all', _id)
-        # redis.rem(rkey(cls, 'all'), _id)
 
         key = rkey(cls, _id)
         return redis.delete(key)
@@ -193,6 +192,12 @@ class User(BaseModel):
         _id = cls.get_id(username)
         return cls.get(_id)
 
+    @classmethod
+    def delete(cls, _id):
+        user = cls.get(_id)
+        cls._link_id_delete(user.username)
+        return super(User, cls).delete(_id)
+
 
 class Session(BaseModel):
     model = 'session'
@@ -229,9 +234,9 @@ class Category(BaseModel):
     @classmethod
     def delete(cls, _id):
         category = cls.get(_id)
-        super(Category, cls).delete(category['id'])
+        cls._link_id_delete(category.title)
+        return super(Category, cls).delete(category.id)
 
-        cls._link_id_delete(category['title'])
 
 
 class Sub(BaseModel):
@@ -244,9 +249,9 @@ class Sub(BaseModel):
 
         _id = cls._gen_id()
         sub = cls.set(_id, title=title, description=description,
-                      category=category['id'])
+                      category=category.id)
 
-        key = '{}:subs'.format(category['id'])
+        key = '{}:subs'.format(category.id)
         Category._field_add(key, _id)
 
         cls.link_id(title, _id)
@@ -255,12 +260,12 @@ class Sub(BaseModel):
     @classmethod
     def delete(cls, _id):
         sub = cls.get(_id)
-        super(Sub, cls).delete(sub['id'])
-
-        cls._link_id_delete(sub['title'])
-        # remove sub link from category
-        key = '{}:subs'.format(sub['category'])
+        cls._link_id_delete(sub.title)
+        # remove sub id from category:id:subs set
+        key = '{}:subs'.format(sub.category)
         Category._field_rem(key, _id)
+        return super(Sub, cls).delete(sub.id)
+
 
     @classmethod
     def link_thread(self, sub_id, thread_id):
@@ -317,3 +322,5 @@ class Thread(BaseModel):
     def user_threads(self):
         key = 'user:{}:threads'.format(self.user.id)
         return redis.smembers(key)
+
+
