@@ -320,7 +320,7 @@ class Thread(BaseModel):
         return _id
 
     def user_threads(self):
-        key = 'user:{}:threads'.format(self.user.id)
-        return redis.smembers(key)
+        key = '{}:threads'.format(self.user.id)
+        return User._field_values(key)
 
 
