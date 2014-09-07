@@ -406,5 +406,29 @@ class ThreadModelTestCase(unittest.TestCase):
         redis.flushdb()
 
     def test_create_thread(self):
-        user = models.User.create('marv', 'pass')
-        thread = models.Thread(user_id=user.id)
+        user1 = models.User.create('test', 'test')
+        user2 = models.User.create('test2', 'test')
+        thread = models.Thread(user_id=user1.id)
+        _id = thread.create(title='title', body='body')
+        thread = models.Thread.get(_id)
+        assert thread.title == 'title'
+        assert thread.body == 'body'
+        assert thread.user.id == user1.id
+        thread2 = models.Thread(user_id=user2.id)
+        _id2 = thread2.create(title='title', body='body')
+        thread2 = models.Thread.get(_id2)
+        assert thread2.user.id == user2.id
+
+    def test_user_threads(self):
+        user1 = models.User.create('test', 'test')
+        user2 = models.User.create('test2', 'test')
+        thread1 = models.Thread(user_id=user1.id)
+        thread2 = models.Thread(user_id=user2.id)
+        _id1 = thread1.create(title='title', body='body')
+        _id2 = thread2.create(title='title', body='body')
+
+        assert _id1 in thread1.user_threads()
+        assert _id2 not in thread1.user_threads()
+        assert _id1 not in thread2.user_threads()
+        assert _id2 in thread2.user_threads()
+
