@@ -271,21 +271,21 @@ class Sub(BaseModel):
 
 
     @classmethod
-    def link_thread(self, sub_id, thread_id):
+    def link_thread(cls, sub_id, thread_id):
         key = '{}:threads'.format(sub_id)
         return Sub._field_add(key, thread_id)
 
     @classmethod
-    def unlink_thread(self, sub_id, thread_id):
+    def unlink_thread(cls, sub_id, thread_id):
         key = '{}:threads'.format(sub_id)
-        return self._field_rem(key, thread_id)
+        return cls._field_rem(key, thread_id)
 
     @classmethod
-    def get_threads(self, sub_id, count=10, page=1):
+    def get_threads(cls, sub_id, count=10, page=1):
         # return threads for this sub
         key = '{}:threads'.format(sub_id)
         start = (page-1)*count
-        threads_ids = list(self._field_values(key))
+        threads_ids = list(cls._field_values(key))
         threads_ids.sort(reverse=True)
         threads_ids = threads_ids[start:start+count]
         threads = []
