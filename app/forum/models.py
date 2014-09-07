@@ -1,3 +1,5 @@
+import time
+
 from app import redis
 from .helpers import hash_pass
 from structures import AttrDict
@@ -30,7 +32,7 @@ class BaseModel(object):
         return rkey(cls, cls._gen_id())
 
     @classmethod
-    def _field_sadd(cls, field, value):
+    def _field_add(cls, field, value):
         """
         set value to -> key model:field
         also used to store values where no fields can have the
@@ -38,23 +40,23 @@ class BaseModel(object):
         """
 
         key = rkey(cls, field)
-        return redis.sadd(key, value)
+        return redis.zadd(key, int(time.time()), value)
 
     @classmethod
-    def _field_srem(cls, field, value):
+    def _field_rem(cls, field, value):
         """
         remove value from -> key model:field
         """
 
         key = rkey(cls, field)
-        return redis.srem(key, value)
+        return redis.zrem(key, value)
 
     @classmethod
     def _field_values(cls, field):
         """ return model:field set values """
 
         key = rkey(cls, field)
-        return redis.smembers(key)
+        return redis.zrange(key, 0, -1, desc=True)
 
     @classmethod
     def _field_value_exists(cls, field, value):
@@ -117,7 +119,7 @@ class BaseModel(object):
 
         key = rkey(cls, _id)
         # add id to model:all set
-        cls._field_sadd('all', _id)
+        cls._field_add('all', _id)
 
         return redis.hmset(key, fields)
 
@@ -140,7 +142,8 @@ class BaseModel(object):
         """ delete any key from database """
 
         # remove id from model:all set
-        redis.srem(rkey(cls, 'all'), _id)
+        cls._field_rem('all', _id)
+        # redis.rem(rkey(cls, 'all'), _id)
 
         key = rkey(cls, _id)
         return redis.delete(key)
@@ -156,7 +159,7 @@ class BaseModel(object):
     def all_ids(cls):
         """ return id set for key model:all """
 
-        return redis.smembers(rkey(cls, 'all'))
+        return cls._field_values('all')
 
     @classmethod
     def all(cls):
@@ -244,7 +247,7 @@ class Sub(BaseModel):
                       category=category['id'])
 
         key = '{}:subs'.format(category['id'])
-        Category._field_sadd(key, _id)
+        Category._field_add(key, _id)
 
         cls.link_id(title, _id)
         return cls.get(_id)
@@ -257,17 +260,17 @@ class Sub(BaseModel):
         cls._link_id_delete(sub['title'])
         # remove sub link from category
         key = '{}:subs'.format(sub['category'])
-        Category._field_srem(key, _id)
+        Category._field_rem(key, _id)
 
     @classmethod
     def link_thread(self, sub_id, thread_id):
         key = '{}:threads'.format(sub_id)
-        return Sub._field_sadd(key, thread_id)
+        return Sub._field_add(key, thread_id)
 
     @classmethod
     def unlink_thread(self, sub_id, thread_id):
         key = '{}:threads'.format(sub_id)
-        return self._field_srem(key, thread_id)
+        return self._field_rem(key, thread_id)
 
     @classmethod
     def get_threads(self, sub_id, count=10, page=1):
@@ -309,7 +312,7 @@ class Thread(BaseModel):
         Sub.link_thread(sub_id=self.sub.id, thread_id=_id)
         # set thread in 'user:id:threads'
         key = '{}:threads'.format(self.user.id)
-        User._field_sadd(key, _id)
+        User._field_add(key, _id)
         return _id
 
     def user_threads(self):

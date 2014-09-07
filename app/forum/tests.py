@@ -1,5 +1,6 @@
 import unittest
 import mock
+import time
 
 import fakeredis
 from werkzeug.security import generate_password_hash
@@ -64,8 +65,8 @@ class BaseModelTestCase(unittest.TestCase):
         key = 'model:6'
         assert redis.hgetall(key) == values
         # assert if id 6 in 'model:all set'
-        assert '6' in redis.smembers('model:all')
-        assert '7' not in redis.smembers('model:all')
+        assert '6' in redis.zrange('model:all', 0, -1)
+        assert '7' not in redis.zrange('model:all', 0, -1)
 
     def test_edit_hash_fields(self):
         key = 'model:6'
@@ -98,19 +99,19 @@ class BaseModelTestCase(unittest.TestCase):
         values['id'] = '1'
         assert self.model.get('1') == values
 
-    def test_field_sadd(self):
+    def test_field_add(self):
         key = 'model:field'
         value = 'value'
-        self.model._field_sadd('field', value)
-        assert redis.smembers(key) == set([value])
+        self.model._field_add('field', value)
+        assert redis.zrange(key, 0, -1) == [value]
 
-    def test_field_srem(self):
+    def test_field_rem(self):
         key = 'model:field'
         value = 'value'
-        self.model._field_sadd('field', value)
-        assert redis.smembers(key) == set([value])
-        self.model._field_srem('field', value)
-        assert not redis.smembers(key) == set([value])
+        self.model._field_add('field', value)
+        assert redis.zrange(key, 0, -1) == [value]
+        self.model._field_rem('field', value)
+        assert not redis.zrange(key, 0, -1) == [value]
 
     def test_field_value_exists(self):
         redis.sadd('model:names', 'value')
@@ -120,8 +121,8 @@ class BaseModelTestCase(unittest.TestCase):
         assert not self.model._field_value_exists('names', 'wrong_svalue')
 
     def test_field_values(self):
-        redis.sadd('model:name', 'value', 'value2')
-        assert self.model._field_values('name') == set(['value', 'value2'])
+        redis.zadd('model:name', 1, 'value', 2, 'value2')
+        assert self.model._field_values('name') == ['value2', 'value']
 
     def test_link_id(self):
         key = 'model:models'
@@ -151,11 +152,11 @@ class BaseModelTestCase(unittest.TestCase):
         key = 'model:4'
         self.model.set('4', test='test')
         assert redis.hexists(key, 'test')
-        assert '4' in redis.smembers('model:all')
+        assert '4' in redis.zrange('model:all', 0, -1)
 
         self.model.delete('4')
         assert not redis.hexists(key, 'test')
-        assert not '4' in redis.smembers('model:all')
+        assert not '4' in redis.zrange('model:all', 0, -1)
 
     def test_delete_field(self):
         key = 'model:4'
@@ -168,8 +169,8 @@ class BaseModelTestCase(unittest.TestCase):
 
     def test_all_ids(self):
         key = 'model:all'
-        redis.sadd(key, 1, 2, 3)
-        assert '2' in redis.smembers(key)
+        redis.zadd(key, 1, 1, 2, 2, 3, 3)
+        assert '2' in redis.zrange(key, 0, -1)
         assert '2' in self.model.all_ids()
         assert '3' in self.model.all_ids()
 
@@ -178,7 +179,7 @@ class BaseModelTestCase(unittest.TestCase):
         self.model.set('2', val='asd')
         self.model.set('5', val='asd')
         self.model.set('233', val='asd')
-        assert '5' in redis.smembers(key)
+        assert '5' in redis.zrange(key, 0, -1)
 
         _all = ['2', '5', '233']
         for obj in self.model.all():
@@ -398,18 +399,18 @@ class SubModelTestCase(unittest.TestCase):
     def test_link_thread(self):
         models.Sub.link_thread(sub_id=1, thread_id='2')
         models.Sub.link_thread(sub_id=1, thread_id='4')
-        assert '2' in redis.smembers('sub:1:threads')
-        assert '4' in redis.smembers('sub:1:threads')
-        assert '124' not in redis.smembers('sub:1:threads')
+        assert '2' in redis.zrange('sub:1:threads', 0, -1)
+        assert '4' in redis.zrange('sub:1:threads', 0, -1)
+        assert '124' not in redis.zrange('sub:1:threads', 0, -1)
 
     def test_unlink_thread(self):
         models.Sub.link_thread(sub_id=1, thread_id='2')
         models.Sub.link_thread(sub_id=1, thread_id='4')
-        assert '2' in redis.smembers('sub:1:threads')
-        assert '4' in redis.smembers('sub:1:threads')
+        assert '2' in redis.zrange('sub:1:threads', 0, -1)
+        assert '4' in redis.zrange('sub:1:threads', 0, -1)
         models.Sub.unlink_thread(sub_id=1, thread_id='2')
-        assert '2' not in redis.smembers('sub:1:threads')
-        assert '4' in redis.smembers('sub:1:threads')
+        assert '2' not in redis.zrange('sub:1:threads', 0, -1)
+        assert '4' in redis.zrange('sub:1:threads', 0, -1)
 
     def test_get_threads(self):
         category = models.Category.create('category name')
@@ -477,11 +478,11 @@ class ThreadModelTestCase(unittest.TestCase):
         thread = models.Thread(user=user, sub=self.sub)
         _id = thread.create(title='title', body='body')
         key = 'sub:{}:threads'.format(self.sub.id)
-        assert _id in redis.smembers(key)
+        assert _id in redis.zrange(key, 0, -1)
         category = models.Category.create('category name')
         sub2 = models.Sub.create(category, 'title', 'description')
         thread2 = models.Thread(user=user, sub=sub2)
         _id2 = thread2.create(title='title', body='body')
-        assert _id2 not in redis.smembers(key)
+        assert _id2 not in redis.zrange(key, 0, -1)
         key = 'sub:{}:threads'.format(sub2.id)
-        assert _id2 in redis.smembers(key)
+        assert _id2 in redis.zrange(key, 0, -1)
