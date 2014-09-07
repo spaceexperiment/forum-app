@@ -395,27 +395,66 @@ class SubModelTestCase(unittest.TestCase):
         assert not models.Sub.get_id(title)
         assert models.Sub.get_id('title2')
 
+    def test_link_thread(self):
+        models.Sub.link_thread(sub_id=1, thread_id='2')
+        models.Sub.link_thread(sub_id=1, thread_id='4')
+        assert '2' in redis.smembers('sub:1:threads')
+        assert '4' in redis.smembers('sub:1:threads')
+        assert '124' not in redis.smembers('sub:1:threads')
+
+    def test_unlink_thread(self):
+        models.Sub.link_thread(sub_id=1, thread_id='2')
+        models.Sub.link_thread(sub_id=1, thread_id='4')
+        assert '2' in redis.smembers('sub:1:threads')
+        assert '4' in redis.smembers('sub:1:threads')
+        models.Sub.unlink_thread(sub_id=1, thread_id='2')
+        assert '2' not in redis.smembers('sub:1:threads')
+        assert '4' in redis.smembers('sub:1:threads')
+
+    def test_get_threads(self):
+        category = models.Category.create('category name')
+        sub = models.Sub.create(category, 'title', 'description')
+        sub2 = models.Sub.create(category, 'title2', 'description')
+        user = models.User.create('test', 'test')
+        thread = models.Thread(user=user, sub=sub)
+        thread1 = thread.create(title='title', body='body')
+        thread1 = models.Thread.get(thread1)
+        thread2 = thread.create(title='title', body='body')
+        thread2 = models.Thread.get(thread2)
+        assert thread1 in models.Sub.get_threads(sub.id)
+        assert thread2 in models.Sub.get_threads(sub.id)
+        thread = models.Thread(user=user, sub=sub2)
+        thread3 = thread.create(title='title', body='body')
+        thread3 = models.Thread.get(thread3)
+        assert thread3 in models.Sub.get_threads(sub2.id)
+        assert thread1 not in models.Sub.get_threads(sub2.id)
+        assert thread3 not in models.Sub.get_threads(sub.id)
+
+
+
 
 class ThreadModelTestCase(unittest.TestCase):
+
+    category = models.Category.create('category name')
+    sub = models.Sub.create(category, 'title', 'description')
 
     def setUp(self):
         pass
 
     def tearDown(self):
-        # delete databases
+        # models.Category.delete(self.category.id)
         redis.flushdb()
 
     def test_create_thread(self):
-        # sub = Sub.create()
         user1 = models.User.create('test', 'test')
         user2 = models.User.create('test2', 'test')
-        thread = models.Thread(user=user1)
+        thread = models.Thread(user=user1, sub=self.sub)
         _id = thread.create(title='title', body='body')
         thread = models.Thread.get(_id)
         assert thread.title == 'title'
         assert thread.body == 'body'
         assert thread.user.id == user1.id
-        thread2 = models.Thread(user=user2)
+        thread2 = models.Thread(user=user2, sub=self.sub)
         _id2 = thread2.create(title='title', body='body')
         thread2 = models.Thread.get(_id2)
         assert thread2.user.id == user2.id
@@ -423,8 +462,8 @@ class ThreadModelTestCase(unittest.TestCase):
     def test_user_threads(self):
         user1 = models.User.create('test', 'test')
         user2 = models.User.create('test2', 'test')
-        thread1 = models.Thread(user=user1)
-        thread2 = models.Thread(user=user2)
+        thread1 = models.Thread(user=user1, sub=self.sub)
+        thread2 = models.Thread(user=user2, sub=self.sub)
         _id1 = thread1.create(title='title', body='body')
         _id2 = thread2.create(title='title', body='body')
 
@@ -433,3 +472,16 @@ class ThreadModelTestCase(unittest.TestCase):
         assert _id1 not in thread2.user_threads()
         assert _id2 in thread2.user_threads()
 
+    def test_thread_in_sub(self):
+        user = models.User.create('test', 'test')
+        thread = models.Thread(user=user, sub=self.sub)
+        _id = thread.create(title='title', body='body')
+        key = 'sub:{}:threads'.format(self.sub.id)
+        assert _id in redis.smembers(key)
+        category = models.Category.create('category name')
+        sub2 = models.Sub.create(category, 'title', 'description')
+        thread2 = models.Thread(user=user, sub=sub2)
+        _id2 = thread2.create(title='title', body='body')
+        assert _id2 not in redis.smembers(key)
+        key = 'sub:{}:threads'.format(sub2.id)
+        assert _id2 in redis.smembers(key)

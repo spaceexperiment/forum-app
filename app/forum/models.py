@@ -230,6 +230,7 @@ class Category(BaseModel):
 
         cls._link_id_delete(category['title'])
 
+
 class Sub(BaseModel):
     model = 'sub'
 
@@ -259,15 +260,40 @@ class Sub(BaseModel):
         Category._field_srem(key, _id)
 
     @classmethod
+    def link_thread(self, sub_id, thread_id):
+        key = '{}:threads'.format(sub_id)
+        return Sub._field_sadd(key, thread_id)
+
+    @classmethod
+    def unlink_thread(self, sub_id, thread_id):
+        key = '{}:threads'.format(sub_id)
+        return self._field_srem(key, thread_id)
+
+    @classmethod
+    def get_threads(self, sub_id, count=10, page=1):
+        # return threads for this sub
+        key = '{}:threads'.format(sub_id)
+        start = (page-1)*count
+        threads_ids = list(self._field_values(key))
+        threads_ids.sort(reverse=True)
+        threads_ids = threads_ids[start:start+count]
+        threads = []
+        for thread_id in threads_ids:
+            threads.append(Thread.get(thread_id))
+        return threads
+
+
+    @classmethod
     def edit(cls, _id, linked='title', **fields):
         return super(Sub, cls).edit(_id=_id, linked=linked, **fields)
+
 
 class Thread(BaseModel):
     model = 'thread'
 
-    def __init__(self, user):
+    def __init__(self, user, sub):
         self.user = user
-        # self.sub_id = sub_id
+        self.sub = sub
 
     @classmethod
     def get(self, _id):
@@ -277,10 +303,11 @@ class Thread(BaseModel):
 
     def create(self, title, body):
         _id = self._gen_id()
-        # save data
-        self.set(_id, user=self.user.id, title=title, body=body)
-
-        # set thread ids in 'user:id:threads'
+        self.set(_id, user=self.user.id, sub=self.sub.id,
+                 title=title, body=body)
+        # set thread in 'sub:id:threads'
+        Sub.link_thread(sub_id=self.sub.id, thread_id=_id)
+        # set thread in 'user:id:threads'
         key = '{}:threads'.format(self.user.id)
         User._field_sadd(key, _id)
         return _id
