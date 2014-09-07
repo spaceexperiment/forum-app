@@ -473,7 +473,6 @@ class ThreadModelTestCase(unittest.TestCase):
         pass
 
     def tearDown(self):
-        # models.Category.delete(self.category.id)
         redis.flushdb()
 
     def test_create_thread(self):
@@ -516,3 +515,27 @@ class ThreadModelTestCase(unittest.TestCase):
         assert _id2 not in redis.zrange(key, 0, -1)
         key = 'sub:{}:threads'.format(sub2.id)
         assert _id2 in redis.zrange(key, 0, -1)
+
+    def test_edit_thread(self):
+        user = models.User.create('test', 'test')
+        thread = models.Thread(user=user, sub=self.sub)
+        _id = thread.create(title='title', body='body')
+        thread = models.Thread.get(_id)
+        models.Thread.edit(thread.id, title='new title', body='new body')
+        new_thread = models.Thread.get(thread.id)
+        assert new_thread.title == 'new title'
+        assert new_thread.body == 'new body'
+        assert not thread == new_thread
+
+    def test_delete_thread(self):
+        user = models.User.create('test', 'test')
+        thread = models.Thread(user=user, sub=self.sub)
+        _id = thread.create(title='title', body='body')
+        key1 = 'sub:{}:threads'.format(self.sub.id)
+        key2 = 'user:{}:threads'.format(user.id)
+        assert _id in redis.zrange(key1, 0, -1)
+        assert _id in redis.zrange(key2, 0, -1)
+        thread.delete(_id)
+        assert not models.Thread.get(_id)
+        assert _id not in redis.zrange(key1, 0, -1)
+        assert _id not in redis.zrange(key2, 0, -1)

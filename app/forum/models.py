@@ -319,18 +319,18 @@ class Thread(BaseModel):
     @classmethod
     def get(self, _id):
         obj = super(Thread, self).get(_id)
-        obj.user = User.get(obj.user)
-        return obj
+        if obj:
+            obj.user = User.get(obj.user)
+            return obj
+        return None
 
     def create(self, title, body):
         _id = self._gen_id()
         self.set(_id, user=self.user.id, sub=self.sub.id,
                  title=title, body=body)
-        # set thread in 'sub:id:threads'
+        # set thread in 'sub:id:threads and user:id:threads'
         Sub.link_thread(sub_id=self.sub.id, thread_id=_id)
-        # set thread in 'user:id:threads'
-        key = '{}:threads'.format(self.user.id)
-        User._field_add(key, _id)
+        User.link_thread(user_id=self.user.id, thread_id=_id)
         return _id
 
     def user_threads(self):
@@ -338,6 +338,7 @@ class Thread(BaseModel):
         return User._field_values(key)
 
     def delete(self, _id):
-        unlink_thread(self.sub.id, _id)
-        return 
+        Sub.unlink_thread(self.sub.id, _id)
+        User.unlink_thread(self.user.id, _id)
+        return super(Thread, self).delete(_id)
 
