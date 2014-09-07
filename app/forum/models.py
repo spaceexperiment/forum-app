@@ -268,6 +268,12 @@ class Thread(BaseModel):
     def __init__(self, user_id):
         self.uid = user_id
 
+    @classmethod
+    def get(self, _id):
+        obj = super(Thread, self).get(_id)
+        obj.user = User.get(obj.user)
+        return obj
+
     def create(self, title, body):
         _id = self._gen_id()
         # save data
@@ -276,6 +282,7 @@ class Thread(BaseModel):
         # set thread ids in 'user:id:threads'
         key = '{}:threads'.format(self.uid)
         User._field_sadd(key, _id)
+        return _id
 
     def user_threads(self):
         key = 'user:{}:threads'.format(self.uid)
