@@ -86,7 +86,7 @@ class BaseModelTestCase(unittest.TestCase):
         self.model.link_id('value1', '6')
         assert self.model.get_id('value1') == '6'
         new_value = {'test1': 'val3', 'test2': 'value9'}
-        self.model.edit('6', linked='test1', test1='val3', test2='value9')
+        self.model.edit('6', link='test1', test1='val3', test2='value9')
         assert redis.hgetall(key) == new_value, redis.hgetall(key)
         assert not self.model.get_id('value1') == '6'
         assert self.model.get_id('val3') == '6'
@@ -288,6 +288,14 @@ class CategoryModelTestCase(unittest.TestCase):
         assert category
         # create it again with same title
         self.assertRaises(CategoryExistsError, models.Category.create, title)
+
+    def test_edit_category(self):
+        category = models.Category.create('cat')
+        models.Category.edit(_id=category.id, title='new cat')
+        new_cat = models.Category.get(category.id)
+        assert not category == new_cat
+        assert not models.Category.get_id('cat')
+        assert models.Category.get_id('new cat')
 
     def test_delete_category(self):
         category = models.Category.create('title')

@@ -124,15 +124,15 @@ class BaseModel(object):
         return redis.hmset(key, fields)
 
     @classmethod
-    def edit(cls, _id, linked=None, **fields):
+    def edit(cls, _id, link=None, **fields):
         """
-        Edit hash fields, if field linked to id, then delete
+        Edit hash fields, if field link to id, then delete
             and recreate with new key to link_id,
         """
 
-        if linked and linked in fields:
-            old_field = cls.get(_id)[linked]
-            new_field = fields[linked]
+        if link and link in fields:
+            old_field = cls.get(_id)[link]
+            new_field = fields[link]
             cls._link_id_change(old_field, new_field)
 
         return cls.set(_id, **fields)
@@ -182,10 +182,10 @@ class User(BaseModel):
         return cls.get(_id)
 
     @classmethod
-    def edit(cls, _id, linked='username', **fields):
+    def edit(cls, _id, link='username', **fields):
         if 'password' in fields.keys():
             fields['password'] = hash_pass(fields['password'])
-        return super(User, cls).edit(_id=_id, linked=linked, **fields)
+        return super(User, cls).edit(_id=_id, link=link, **fields)
 
     @classmethod
     def by_username(cls, username):
@@ -237,6 +237,9 @@ class Category(BaseModel):
         cls._link_id_delete(category.title)
         return super(Category, cls).delete(category.id)
 
+    @classmethod
+    def edit(cls, _id, link='title', **fields):
+        return super(Category, cls).edit(_id=_id, link=link, **fields)
 
 
 class Sub(BaseModel):
@@ -291,8 +294,8 @@ class Sub(BaseModel):
         return threads
 
     @classmethod
-    def edit(cls, _id, linked='title', **fields):
-        return super(Sub, cls).edit(_id=_id, linked=linked, **fields)
+    def edit(cls, _id, link='title', **fields):
+        return super(Sub, cls).edit(_id=_id, link=link, **fields)
 
 
 class Thread(BaseModel):
