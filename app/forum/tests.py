@@ -406,15 +406,16 @@ class ThreadModelTestCase(unittest.TestCase):
         redis.flushdb()
 
     def test_create_thread(self):
+        # sub = Sub.create()
         user1 = models.User.create('test', 'test')
         user2 = models.User.create('test2', 'test')
-        thread = models.Thread(user_id=user1.id)
+        thread = models.Thread(user=user1)
         _id = thread.create(title='title', body='body')
         thread = models.Thread.get(_id)
         assert thread.title == 'title'
         assert thread.body == 'body'
         assert thread.user.id == user1.id
-        thread2 = models.Thread(user_id=user2.id)
+        thread2 = models.Thread(user=user2)
         _id2 = thread2.create(title='title', body='body')
         thread2 = models.Thread.get(_id2)
         assert thread2.user.id == user2.id
@@ -422,8 +423,8 @@ class ThreadModelTestCase(unittest.TestCase):
     def test_user_threads(self):
         user1 = models.User.create('test', 'test')
         user2 = models.User.create('test2', 'test')
-        thread1 = models.Thread(user_id=user1.id)
-        thread2 = models.Thread(user_id=user2.id)
+        thread1 = models.Thread(user=user1)
+        thread2 = models.Thread(user=user2)
         _id1 = thread1.create(title='title', body='body')
         _id2 = thread2.create(title='title', body='body')
 

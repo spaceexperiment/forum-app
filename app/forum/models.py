@@ -265,8 +265,9 @@ class Sub(BaseModel):
 class Thread(BaseModel):
     model = 'thread'
 
-    def __init__(self, user_id):
-        self.uid = user_id
+    def __init__(self, user):
+        self.user = user
+        # self.sub_id = sub_id
 
     @classmethod
     def get(self, _id):
@@ -277,13 +278,13 @@ class Thread(BaseModel):
     def create(self, title, body):
         _id = self._gen_id()
         # save data
-        self.set(_id, user=self.uid, title=title, body=body)
+        self.set(_id, user=self.user.id, title=title, body=body)
 
         # set thread ids in 'user:id:threads'
-        key = '{}:threads'.format(self.uid)
+        key = '{}:threads'.format(self.user.id)
         User._field_sadd(key, _id)
         return _id
 
     def user_threads(self):
-        key = 'user:{}:threads'.format(self.uid)
+        key = 'user:{}:threads'.format(self.user.id)
         return redis.smembers(key)
