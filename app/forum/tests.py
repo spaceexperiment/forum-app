@@ -186,7 +186,7 @@ class BaseModelTestCase(unittest.TestCase):
             _all.remove(obj['id'])
 
 
-class UserModelsTestCase(unittest.TestCase):
+class UserModelTestCase(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -253,7 +253,7 @@ class UserModelsTestCase(unittest.TestCase):
 
 
 
-class CategoryModelsTestCase(unittest.TestCase):
+class CategoryModelTestCase(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -330,7 +330,7 @@ class CategoryModelsTestCase(unittest.TestCase):
         assert sub4 in category2.subs()
 
 
-class SubModelsTestCase(unittest.TestCase):
+class SubModelTestCase(unittest.TestCase):
 
     def setUp(self):
         pass
