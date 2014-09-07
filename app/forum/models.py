@@ -293,16 +293,21 @@ class Sub(BaseModel):
 
     @classmethod
     def get_threads(cls, sub_id, count=10, page=1):
-        # return threads for this sub
-        key = '{}:threads'.format(sub_id)
+        """ 
+        Get threads for this sub
+        param count: number of threads to return
+        param page: page to return
+        e.g. count=5, page=2 => threads[5:10]
+        return None if no threads found
+        """
+
+        key = 'sub:{}:threads'.format(sub_id)
         start = (page-1)*count
-        threads_ids = list(cls._field_values(key))
-        threads_ids.sort(reverse=True)
-        threads_ids = threads_ids[start:start+count]
+        thread_ids = redis.zrange(key, start, start+count, desc=True)
         threads = []
-        for thread_id in threads_ids:
+        for thread_id in thread_ids:
             threads.append(Thread.get(thread_id))
-        return threads
+        return threads if threads else None
 
     @classmethod
     def edit(cls, _id, link='title', **fields):
