@@ -1,5 +1,6 @@
 from app import redis
 from .helpers import hash_pass
+from structures import AttrDict
 from .exceptions import UserExistsError, CategoryExistsError, SubExistsError, \
                         ThreadExistsError
 
@@ -107,7 +108,7 @@ class BaseModel(object):
         obj = redis.hgetall(key)
         if obj:
             obj['id'] = _id
-            return obj
+            return AttrDict(obj)
         return None
 
     @classmethod
