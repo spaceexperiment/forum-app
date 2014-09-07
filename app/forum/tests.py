@@ -216,7 +216,7 @@ class UserModelTestCase(unittest.TestCase):
 
         # create another user, this should have id=2
         user = models.User.create('marv2', 'pass')
-        assert user['id'] == '2'
+        assert user.id == '2'
         assert '2' in models.User.all_ids()
 
     def test_user_exists(self):
@@ -230,7 +230,7 @@ class UserModelTestCase(unittest.TestCase):
 
     def test_user_hash_password(self):
         user = models.User.create('marv', 'pass')
-        hpass = user['password']
+        hpass = user.password
         assert check_password_hash(hpass, 'pass')
 
     def test_get_user_by_username(self):
@@ -244,12 +244,12 @@ class UserModelTestCase(unittest.TestCase):
 
     def test_edit_user(self):
         user = models.User.create('marv', 'pass')
-        assert check_password_hash(user['password'], 'pass')
-        models.User.edit(user['id'], usernam='marv2', password='pass2')
-        user = models.User.get(user['id'])
-        assert not check_password_hash(user['password'], 'pass')
-        assert check_password_hash(user['password'], 'pass2'), user['password']
-        assert user['username'] == 'marv'
+        assert check_password_hash(user.password, 'pass')
+        models.User.edit(user.id, username='marv2', password='pass2')
+        user = models.User.get(user.id)
+        assert not check_password_hash(user.password, 'pass')
+        assert check_password_hash(user.password, 'pass2'), user.password
+        assert user.username == 'marv2'
 
 
 
@@ -267,11 +267,11 @@ class CategoryModelTestCase(unittest.TestCase):
         category = models.Category.create(title)
         assert category
 
-        _id = category['id']
+        _id = category.id
         assert models.Category.get(_id)
         assert _id in models.Category.all_ids()
         assert category in models.Category.all()
-        assert category['title'] == title
+        assert category.title == title
         assert _id == models.Category.get_id(title)
 
     def test_create_category_exists_raise_error(self):
@@ -285,8 +285,8 @@ class CategoryModelTestCase(unittest.TestCase):
         category = models.Category.create('title')
         assert category
         assert models.Category.get_id('title')
-        models.Category.delete(category['id'])
-        assert not models.Category.get(category['id'])
+        models.Category.delete(category.id)
+        assert not models.Category.get(category.id)
         assert not '1' in models.Category.all()
         assert not models.Category.get_id('title')
 
@@ -304,11 +304,11 @@ class CategoryModelTestCase(unittest.TestCase):
         title = 'sub title'
         description = 'sub description'
         category = models.Category.create('category name')
-        category = models.Category(category['id'])
+        category = models.Category(category.id)
         sub = category.create_sub(title, description)
-        assert sub['title'] == title
-        assert sub['description'] == description
-        assert sub['category'] == category.category['id']
+        assert sub.title == title
+        assert sub.description == description
+        assert sub.category == category.category.id
 
     def test_get_all_subs(self):
         category1 = models.Category.create('category name')
@@ -345,15 +345,15 @@ class SubModelTestCase(unittest.TestCase):
         category = models.Category.create('category name')
         sub = models.Sub.create(category, title, description)
         assert sub
-        _id = sub['id']
-        assert title == sub['title']
-        assert description == sub['description']
+        _id = sub.id
+        assert title == sub.title
+        assert description == sub.description
         assert models.Sub.get(_id)
         assert sub in models.Sub.all()
         assert _id in models.Sub.all_ids()
         assert _id == models.Sub.get_id(title)
 
-        key = 'category:{}:subs'.format(category['id'])
+        key = 'category:{}:subs'.format(category.id)
         assert redis.sismember(key, _id)
 
     def test_create_sub_exists_raise_error(self):
@@ -369,28 +369,42 @@ class SubModelTestCase(unittest.TestCase):
         description = 'sub description'
         category = models.Category.create('category name')
         sub = models.Sub.create(category, title, description)
-        assert models.Sub.get(sub['id'])
-        key = 'category:{}:subs'.format(sub['category'])
-        assert redis.sismember(key, sub['id'])
+        assert models.Sub.get(sub.id)
+        key = 'category:{}:subs'.format(sub.category)
+        assert redis.sismember(key, sub.id)
 
-        models.Sub.delete(sub['id'])
-        assert not models.Sub.get(sub['id'])
-        assert not redis.sismember(key, sub['id'])
-        assert not models.Sub.get_id(sub['title'])
+        models.Sub.delete(sub.id)
+        assert not models.Sub.get(sub.id)
+        assert not redis.sismember(key, sub.id)
+        assert not models.Sub.get_id(sub.title)
 
     def test_edit_sub(self):
         title = 'sub title'
         description = 'sub description'
         category = models.Category.create('category name')
         sub = models.Sub.create(category, title, description)
-        assert sub['title'] == title
-        assert sub['description'] == description
+        assert sub.title == title
+        assert sub.description == description
         assert models.Sub.get_id(title)
 
-        models.Sub.edit(_id=sub['id'], title='title2', description='desc2')
-        sub = models.Sub.get(sub['id'])
-        assert sub['title'] == 'title2'
-        assert sub['description'] == 'desc2'
+        models.Sub.edit(_id=sub.id, title='title2', description='desc2')
+        sub = models.Sub.get(sub.id)
+        assert sub.title == 'title2'
+        assert sub.description == 'desc2'
         # check if link changed
         assert not models.Sub.get_id(title)
         assert models.Sub.get_id('title2')
+
+
+class ThreadModelTestCase(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        # delete databases
+        redis.flushdb()
+
+    def test_create_thread(self):
+        user = models.User.create('marv', 'pass')
+        thread = models.Thread(user_id=user.id)
