@@ -275,7 +275,15 @@ class UserModelTestCase(unittest.TestCase):
         assert '2' not in redis.zrange('user:1:threads', 0, -1)
         assert '4' in redis.zrange('user:1:threads', 0, -1)
 
-
+    def test_link_unlink_post(self):
+        models.User.link_post(user_id=1, post_id='2')
+        models.User.link_post(user_id=3, post_id='3')
+        assert '2' in redis.zrange('user:1:posts', 0, -1)
+        assert '3' in redis.zrange('user:3:posts', 0, -1)
+        assert '2' not in redis.zrange('user:3:posts', 0, -1)
+        models.User.unlink_post(user_id=3, post_id='3')
+        assert '3' not in redis.zrange('user:3:posts', 0, -1)
+        assert '2' in redis.zrange('user:1:posts', 0, -1)
 
 
 
@@ -539,3 +547,23 @@ class ThreadModelTestCase(unittest.TestCase):
         assert not models.Thread.get(_id)
         assert _id not in redis.zrange(key1, 0, -1)
         assert _id not in redis.zrange(key2, 0, -1)
+
+
+    def test_link_unlink_post(self):
+        models.Thread.link_post(thread_id=1, post_id='2')
+        models.Thread.link_post(thread_id=3, post_id='3')
+        assert '2' in redis.zrange('thread:1:posts', 0, -1)
+        assert '3' in redis.zrange('thread:3:posts', 0, -1)
+        assert '2' not in redis.zrange('thread:3:posts', 0, -1)
+        models.Thread.unlink_post(thread_id=3, post_id='3')
+        assert '3' not in redis.zrange('thread:3:posts', 0, -1)
+        assert '2' in redis.zrange('thread:1:posts', 0, -1)
+
+
+class PostModelTestCase(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass

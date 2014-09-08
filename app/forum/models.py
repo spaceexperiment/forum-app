@@ -1,4 +1,4 @@
-import time
+from time import time
 
 from app import redis
 from .helpers import hash_pass
@@ -39,7 +39,7 @@ class BaseModel(object):
         """
 
         key = rkey(cls, field)
-        return redis.zadd(key, int(time.time()), value)
+        return redis.zadd(key, int(time()), value)
 
     @classmethod
     def _field_rem(cls, field, value):
@@ -207,6 +207,17 @@ class User(BaseModel):
         key = '{}:threads'.format(user_id)
         return cls._field_rem(key, thread_id)
 
+    @classmethod
+    def link_post(cls, user_id, post_id):
+        key = '{}:posts'.format(user_id)
+        return cls._field_add(key, post_id)
+
+    @classmethod
+    def unlink_post(cls, user_id, post_id):
+        key = '{}:posts'.format(user_id)
+        return cls._field_rem(key, post_id)
+
+
 
 
 class Session(BaseModel):
@@ -290,6 +301,7 @@ class Sub(BaseModel):
         key = '{}:threads'.format(sub_id)
         return cls._field_rem(key, thread_id)
 
+
     @classmethod
     def get_threads(cls, sub_id, count=10, page=1):
         """ 
@@ -321,8 +333,8 @@ class Thread(BaseModel):
         self.sub = sub
 
     @classmethod
-    def get(self, _id):
-        obj = super(Thread, self).get(_id)
+    def get(cls, _id):
+        obj = super(Thread, cls).get(_id)
         if obj:
             obj.user = User.get(obj.user)
             return obj
@@ -330,8 +342,15 @@ class Thread(BaseModel):
 
     def create(self, title, body):
         _id = self._gen_id()
-        self.set(_id, user=self.user.id, sub=self.sub.id,
-                 title=title, body=body)
+        self.set(
+            _id=_id,
+            user=self.user.id,
+            sub=self.sub.id,
+            created=int(time()),
+            edited=int(time()),
+            title=title,
+            body=body
+        )
         self.link_id(title, _id)
         # set thread id in 'sub:sub_id:threads and user:user_id:threads'
         Sub.link_thread(sub_id=self.sub.id, thread_id=_id)
@@ -348,4 +367,44 @@ class Thread(BaseModel):
         Sub.unlink_thread(self.sub.id, _id)
         User.unlink_thread(self.user.id, _id)
         return super(Thread, self).delete(_id)
+
+    @classmethod
+    def link_post(cls, thread_id, post_id):
+        key = '{}:posts'.format(thread_id)
+        return cls._field_add(key, post_id)
+
+    @classmethod
+    def unlink_post(cls, thread_id, post_id):
+        key = '{}:posts'.format(thread_id)
+        return cls._field_rem(key, post_id)
+
+
+class Post(BaseModel):
+    model = 'post'
+
+    def __init__(self, user, thread):
+        self.user = user
+        self.thread = thread
+
+    @classmethod
+    def get(cls, _id):
+        obj = super(Post, cls).get(_id)
+        if obj:
+            obj.user = User.get(obj.user)
+            return obj
+        return None
+
+    def create(self, body):
+        _id = self._gen_id()
+        self.set(
+            _id=_id,
+            user=self.user.id,
+            thread=self.thread.id,
+            created=int(time()),
+            edited=int(time()),
+            body=body        
+        )
+        Thread.link_post(self.thread.id, _id)
+        User.link_post(self.user.id, _id)
+        return _id
 
