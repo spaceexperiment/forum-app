@@ -3,8 +3,7 @@ import time
 from app import redis
 from .helpers import hash_pass
 from structures import AttrDict
-from .exceptions import UserExistsError, CategoryExistsError, SubExistsError, \
-                        ThreadExistsError
+from .exceptions import UserExistsError, CategoryExistsError, SubExistsError
 
 
 def rkey(cls, _id):
@@ -333,6 +332,7 @@ class Thread(BaseModel):
         _id = self._gen_id()
         self.set(_id, user=self.user.id, sub=self.sub.id,
                  title=title, body=body)
+        self.link_id(title, _id)
         # set thread id in 'sub:sub_id:threads and user:user_id:threads'
         Sub.link_thread(sub_id=self.sub.id, thread_id=_id)
         User.link_thread(user_id=self.user.id, thread_id=_id)
@@ -343,6 +343,8 @@ class Thread(BaseModel):
         return User._field_values(key)
 
     def delete(self, _id):
+        thread = Thread.get(_id)
+        self._link_id_delete(thread.title)
         Sub.unlink_thread(self.sub.id, _id)
         User.unlink_thread(self.user.id, _id)
         return super(Thread, self).delete(_id)
