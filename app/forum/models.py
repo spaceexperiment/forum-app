@@ -148,11 +148,11 @@ class BaseModel(object):
         return redis.delete(key)
 
     @classmethod
-    def delete_field(cls, _id, fields):
+    def delete_field(cls, _id, *fields):
         """ delete fields from hash """
 
         key = rkey(cls, _id)
-        return redis.hdel(key, fields)
+        return redis.hdel(key, *fields)
 
     @classmethod
     def all_ids(cls):
@@ -333,7 +333,7 @@ class Thread(BaseModel):
         _id = self._gen_id()
         self.set(_id, user=self.user.id, sub=self.sub.id,
                  title=title, body=body)
-        # set thread in 'sub:id:threads and user:id:threads'
+        # set thread id in 'sub:sub_id:threads and user:user_id:threads'
         Sub.link_thread(sub_id=self.sub.id, thread_id=_id)
         User.link_thread(user_id=self.user.id, thread_id=_id)
         return _id
