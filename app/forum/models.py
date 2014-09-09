@@ -355,7 +355,7 @@ class Thread(BaseModel):
         # set thread id in 'sub:sub_id:threads and user:user_id:threads'
         Sub.link_thread(sub_id=self.sub.id, thread_id=_id)
         User.link_thread(user_id=self.user.id, thread_id=_id)
-        return _id
+        return self.get(_id)
 
     def user_threads(self):
         key = '{}:threads'.format(self.user.id)
@@ -406,5 +406,5 @@ class Post(BaseModel):
         )
         Thread.link_post(self.thread.id, _id)
         User.link_post(self.user.id, _id)
-        return _id
+        return self.get(_id)
 
