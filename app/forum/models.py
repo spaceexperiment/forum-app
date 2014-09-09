@@ -218,8 +218,6 @@ class User(BaseModel):
         return cls._field_rem(key, post_id)
 
 
-
-
 class Session(BaseModel):
     model = 'session'
 
@@ -290,7 +288,6 @@ class Sub(BaseModel):
         Category._field_rem(key, _id)
         return super(Sub, cls).delete(sub.id)
 
-
     @classmethod
     def link_thread(cls, sub_id, thread_id):
         key = '{}:threads'.format(sub_id)
@@ -301,10 +298,9 @@ class Sub(BaseModel):
         key = '{}:threads'.format(sub_id)
         return cls._field_rem(key, thread_id)
 
-
     @classmethod
     def get_threads(cls, sub_id, count=10, page=1):
-        """ 
+        """
         Get threads for this sub
         param count: number of threads to return
         param page: page to return
@@ -313,7 +309,7 @@ class Sub(BaseModel):
         """
 
         key = 'sub:{}:threads'.format(sub_id)
-        start = (page-1)*count
+        start = (page - 1) * count
         thread_ids = redis.zrange(key, start, start+count, desc=True)
         threads = []
         for thread_id in thread_ids:
@@ -402,7 +398,7 @@ class Post(BaseModel):
             thread=self.thread.id,
             created=int(time()),
             edited=int(time()),
-            body=body        
+            body=body
         )
         Thread.link_post(self.thread.id, _id)
         User.link_post(self.user.id, _id)

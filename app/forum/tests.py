@@ -2,13 +2,11 @@ import unittest
 import mock
 
 import fakeredis
-from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 
 from . import models
 from .helpers import hash_pass
-from .exceptions import UserExistsError, CategoryExistsError, SubExistsError, \
-                        ThreadExistsError
+from .exceptions import UserExistsError, CategoryExistsError
 
 
 # global fakeredis patch
@@ -220,7 +218,7 @@ class UserModelTestCase(unittest.TestCase):
         assert '2' in models.User.all_ids()
 
     def test_user_exists(self):
-        user = models.User.create('marv', 'pass')
+        models.User.create('marv', 'pass')
         self.assertRaises(UserExistsError, models.User.create, 'marv', 'pass')
 
     def test_hash_pass_function(self):
@@ -234,11 +232,11 @@ class UserModelTestCase(unittest.TestCase):
         assert check_password_hash(hpass, 'pass')
 
     def test_get_user_by_username(self):
-        user = models.User.create('marv', 'pass')
+        models.User.create('marv', 'pass')
         assert models.User.by_username('marv')
         assert not models.User.by_username('wrong_name')
 
-        user = models.User.create('marv2', 'pass')
+        models.User.create('marv2', 'pass')
         assert models.User.by_username('marv2')
         assert not models.User.by_username('wrong_name')
 
@@ -284,7 +282,6 @@ class UserModelTestCase(unittest.TestCase):
         models.User.unlink_post(user_id=3, post_id='3')
         assert '3' not in redis.zrange('user:3:posts', 0, -1)
         assert '2' in redis.zrange('user:1:posts', 0, -1)
-
 
 
 class CategoryModelTestCase(unittest.TestCase):
@@ -401,7 +398,7 @@ class SubModelTestCase(unittest.TestCase):
         title = 'sub title'
         description = 'sub description'
         category = models.Category.create('category name')
-        sub = models.Sub.create(category, title, description)
+        models.Sub.create(category, title, description)
         self.assertRaises(models.SubExistsError,
                           models.Sub.create, category, title, description)
 
@@ -469,7 +466,6 @@ class SubModelTestCase(unittest.TestCase):
 
 
 class ThreadModelTestCase(unittest.TestCase):
-
 
     def setUp(self):
         self.category = models.Category.create('category name')
@@ -540,7 +536,6 @@ class ThreadModelTestCase(unittest.TestCase):
         assert _thread.id not in redis.zrange(key1, 0, -1)
         assert _thread.id not in redis.zrange(key2, 0, -1)
 
-
     def test_link_unlink_post(self):
         models.Thread.link_post(thread_id=1, post_id='2')
         models.Thread.link_post(thread_id=3, post_id='3')
@@ -576,7 +571,6 @@ class PostModelTestCase(unittest.TestCase):
         post = post.create(body='post data')
         assert thread2.id == post.thread
         assert not self.thread.id == post.thread
-
 
     def test_delete_post(self):
         post = models.Post(user=self.user, thread=self.thread)
