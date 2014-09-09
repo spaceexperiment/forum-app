@@ -408,3 +408,7 @@ class Post(BaseModel):
         User.link_post(self.user.id, _id)
         return self.get(_id)
 
+    def delete(self, _id):
+        Thread.unlink_post(self.thread.id, _id)
+        User.unlink_post(self.user.id, _id)
+        return super(Post, self).delete(_id)

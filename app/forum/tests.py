@@ -571,6 +571,19 @@ class PostModelTestCase(unittest.TestCase):
         assert self.user.id == post.user.id
         assert self.thread.id == post.thread
         thread = models.Thread(user=self.user, sub=self.sub)
-        self.thread = thread.create('title', 'body')
-        post = models.Post(user=self.user, thread=self.thread)
+        thread2 = thread.create('title', 'body')
+        post = models.Post(user=self.user, thread=thread2)
         post = post.create(body='post data')
+        assert thread2.id == post.thread
+        assert not self.thread.id == post.thread
+
+
+    def test_delete_post(self):
+        post = models.Post(user=self.user, thread=self.thread)
+        _post = post.create(body='post data')
+        assert models.Post.get(_post.id)
+        key = 'thread:{}:posts'.format(self.thread.id)
+        assert _post.id in redis.zrange(key, 0, -1)
+        post.delete(_post.id)
+        assert not models.Post.get(_post.id)
+        assert _post.id not in redis.zrange(key, 0, -1)
