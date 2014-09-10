@@ -1,4 +1,7 @@
+import os
 from time import time
+from base64 import b64encode
+
 
 from app import redis
 from .helpers import hash_pass
@@ -219,7 +222,34 @@ class User(BaseModel):
 
 
 class Session(BaseModel):
+    """ store any user session data in session:key """
+
     model = 'session'
+
+    @classmethod
+    def get(cls, session_key):
+        obj = super(Session, cls).get(session_key)
+        if obj:
+            obj.user = User.get(obj.user)
+            return obj
+        return None
+
+    @classmethod
+    def create(cls, user):
+        session_key = b64encode(os.urandom(20))
+        # set uid in user field in session:key
+        cls.set(session_key, user=user.id, date=int(time()))
+        # set session key in user object
+        User.set(user.id, session=session_key)
+        return session_key
+
+
+    @classmethod
+    def delete(cls, session_key):
+        uid = cls.get(session_key).user.id
+        User.delete_field(uid, 'session')
+        return super(Session, cls).delete(session_key)
+
 
 
 class Category(BaseModel):

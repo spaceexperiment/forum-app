@@ -284,13 +284,41 @@ class UserModelTestCase(unittest.TestCase):
         assert '2' in redis.zrange('user:1:posts', 0, -1)
 
 
+class SessionModelTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.user = models.User.create(username='marv', password='pass')
+
+    def tearDown(self):
+        redis.flushdb()
+
+    def test_create_session(self):
+        session_key = models.Session.create(self.user)
+        assert session_key
+        assert session_key == models.User.get(self.user.id)['session']
+        assert self.user.id == models.Session.get(session_key).user.id
+
+    def test_delete_session(self):
+        session_key = models.Session.create(self.user)
+        assert models.Session.get(session_key)
+        assert models.User.get(self.user.id).get('session')
+        models.Session.delete(session_key)
+        assert not models.Session.get(session_key)
+        assert not models.User.get(self.user.id).get('session')
+
+    def test_get_session(self):
+        session_key = models.Session.create(self.user)
+        session = models.Session.get(session_key)
+        assert session.user.id == self.user.id
+
+
+
 class CategoryModelTestCase(unittest.TestCase):
 
     def setUp(self):
         pass
 
     def tearDown(self):
-        # delete databases
         redis.flushdb()
 
     def test_create_category(self):
@@ -374,7 +402,6 @@ class SubModelTestCase(unittest.TestCase):
         pass
 
     def tearDown(self):
-        # delete databases
         redis.flushdb()
 
     def test_create_sub(self):
