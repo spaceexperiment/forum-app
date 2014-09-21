@@ -4,9 +4,9 @@ import mock
 import fakeredis
 from werkzeug.security import check_password_hash
 
-from . import models
-from .helpers import hash_pass
-from .exceptions import UserExistsError, CategoryExistsError
+from .. import models
+from ..helpers import hash_pass
+from ..exceptions import UserExistsError, CategoryExistsError
 
 
 # global fakeredis patch
