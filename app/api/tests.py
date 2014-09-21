@@ -11,7 +11,7 @@ from .exceptions import UserExistsError, CategoryExistsError
 
 # global fakeredis patch
 redis = fakeredis.FakeStrictRedis()
-patcher = mock.patch('app.forum.models.redis', redis)
+patcher = mock.patch('app.api.models.redis', redis)
 patcher.start()
 
 

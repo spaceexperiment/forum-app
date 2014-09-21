@@ -5,7 +5,7 @@ from base64 import b64encode
 
 from app import redis
 from .helpers import hash_pass
-from structures import AttrDict
+from .structures import AttrDict
 from .exceptions import UserExistsError, CategoryExistsError, SubExistsError
 
 
@@ -243,13 +243,11 @@ class Session(BaseModel):
         User.set(user.id, session=session_key)
         return session_key
 
-
     @classmethod
     def delete(cls, session_key):
         uid = cls.get(session_key).user.id
         User.delete_field(uid, 'session')
         return super(Session, cls).delete(session_key)
-
 
 
 class Category(BaseModel):
@@ -340,7 +338,7 @@ class Sub(BaseModel):
 
         key = 'sub:{}:threads'.format(sub_id)
         start = (page - 1) * count
-        thread_ids = redis.zrange(key, start, start+count, desc=True)
+        thread_ids = redis.zrange(key, start, start + count, desc=True)
         threads = []
         for thread_id in thread_ids:
             threads.append(Thread.get(thread_id))

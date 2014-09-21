@@ -1,12 +1,13 @@
 from flask import Blueprint, request, session, g, redirect, url_for, abort, \
                   render_template, flash
 
-from .models import User, Session, Thread
+from app.api.models import User, Session, Thread
+from app.api.auth import auth, login_user, logout_user, is_logged_in
+from app.api.helpers import is_complete_tags
+from app.api.exceptions import UserExistsError, CategoryExistsError,\
+                               SubExistsError, ThreadExistsError
+
 from .forms import RegisterForm, ThreadForm
-from .auth import auth, login_user, logout_user, is_logged_in
-from .helpers import is_complete_tags
-from .exceptions import UserExistsError, CategoryExistsError, SubExistsError, \
-                        ThreadExistsError
 
 
 forum = Blueprint('forum', __name__)
