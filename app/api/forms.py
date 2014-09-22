@@ -1,4 +1,7 @@
+import wtforms_json
 from wtforms import Form, StringField, PasswordField, TextAreaField, validators
+
+wtforms_json.init()
 
 
 class RegisterForm(Form):
