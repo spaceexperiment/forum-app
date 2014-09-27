@@ -7,7 +7,7 @@ from app.api.helpers import is_complete_tags
 from app.api.exceptions import UserExistsError, CategoryExistsError,\
                                SubExistsError, ThreadExistsError
 
-from .forms import RegisterForm, ThreadForm
+# from .forms import RegisterForm, ThreadForm
 
 
 forum = Blueprint('forum', __name__)
