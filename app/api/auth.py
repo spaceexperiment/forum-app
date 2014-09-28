@@ -1,5 +1,3 @@
-import os
-from base64 import b64encode
 from functools import wraps
 
 from flask import request, session, g, redirect, url_for
@@ -22,17 +20,18 @@ def logout_user():
     if session_key:
         Session.delete(session_key)
 
+
 def is_logged_in():
     session_key = session.get('s_key')
     if session_key:
         s = Session.get(session_key)
         if s and s.user.session == session_key:
-            return user
+            del s.user['password']
+            return s.user
     return False
 
 
 def auth(f):
-
     @wraps(f)
     def wrapper(*args, **kwargs):
         if g.user:
