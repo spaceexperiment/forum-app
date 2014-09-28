@@ -2,7 +2,6 @@ import redis
 from flask import Flask, request, jsonify, g
 from werkzeug.exceptions import HTTPException, default_exceptions
 
-from api.auth import is_logged_in
 
 redis = redis.StrictRedis(host='localhost', port=6379, db=1)
 
@@ -10,7 +9,9 @@ app = Flask('app')
 app.config.from_object('config')
 
 
+# can only beimport after app creation
 from app.api import api
+from app.api.auth import is_logged_in
 app.register_blueprint(api, url_prefix='/api')
 
 
