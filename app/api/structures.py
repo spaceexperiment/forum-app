@@ -9,9 +9,7 @@ class AttrDict(dict):
     """
 
     def __getitem__(self, key):
-        if key in self:
-            return self.get(key, None)
-        return None
+        return self.get(key, None)
 
     __getattr__ = __getitem__
     __setattr__ = dict.__setitem__
