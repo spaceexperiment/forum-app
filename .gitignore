@@ -66,5 +66,5 @@ dist/
 .tmp/
 
 ### user added ###
-forum.sublime-project
-forum.sublime-workspace
+flask-forum.sublime-project
+flask-forum.sublime-workspace
