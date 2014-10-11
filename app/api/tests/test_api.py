@@ -7,7 +7,8 @@ import fakeredis
 
 from app import app
 from .. import models
-from ..models import User
+from ..models import User, Category
+from ..auth import login_user
 
 
 # global fakeredis patch
@@ -20,9 +21,21 @@ class BaseApiTestCase(unittest.TestCase):
     def setUp(self):
         self.app = app
         self.client = app.test_client()
+        self.ctx = app.test_request_context()
+        self.ctx.push()
+        self.user = User.create('marv', 'pass')
+        user = User.create('admin', 'pass')
+        self.user_admin = User.edit(user.id, is_admin=True)
+
+    def login(self, admin=False):
+        data = {'username': self.user.username, 'password': 'pass'}
+        if admin:
+            data['username'] = self.user_admin.username
+        self.post('/api/login/', data)
 
     def tearDown(self):
         redis.flushdb()
+        self.ctx.pop()
 
     #  a client get helper
     def get(self, url, headers={}, **kwargs):
@@ -41,6 +54,7 @@ class BaseApiTestCase(unittest.TestCase):
 
 
 class UserTestCase(BaseApiTestCase):
+
     def setUp(self):
         super(UserTestCase, self).setUp()
         self.user = User.create('test_username', 'password')
@@ -53,7 +67,7 @@ class UserTestCase(BaseApiTestCase):
         self.post('/api/login/', data)
 
     def test_register_user(self):
-        data = {'username': 'marv', 'password': 'password',
+        data = {'username': 'usercreation', 'password': 'password',
                 'repassword': 'password'}
         with self.client:
             resp = self.post('/api/login/', data)
@@ -99,3 +113,33 @@ class UserTestCase(BaseApiTestCase):
             resp = self.get(url_for('api.logout'))
             assert resp.status_code == 200
             assert not session.get('s_key')
+
+
+class CategoryTestCase(BaseApiTestCase):
+
+    def setUp(self):
+        super(CategoryTestCase, self).setUp()
+        self.category = Category.create(title='test category')
+        self.category2 = Category.create(title='test category2')
+
+    def test_get_list_view(self):
+        resp = self.get('/api/category/')
+        assert len(resp.json) == 2
+        assert resp.json[1]['title'] == 'test category'
+        assert resp.json[1]['id'] == self.category.id
+
+    def test_get_detail_view(self):
+        resp = self.get(url_for('api.category', id=self.category.id))
+        assert resp.json['title'] == self.category.title
+        assert resp.json['id'] == int(self.category.id)
+
+    def test_post_category(self):
+        with self.client:
+            self.login(admin=True)
+            resp = self.post(url_for('api.category'),
+                             {'title':'category_title'})
+            assert resp.status_code == 201, resp.data
+            assert resp.json['title'] == 'category_title'
+
+    def test_put_category(self):
+        pass
