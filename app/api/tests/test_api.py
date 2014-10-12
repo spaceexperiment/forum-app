@@ -1,13 +1,12 @@
-from flask import json, request, session, url_for
-
 import unittest
 import mock
 
+from flask import json, request, session, url_for
 import fakeredis
 
 from app import app
 from .. import models
-from ..models import User, Category
+from ..models import User, Category, Sub, Thread, Post
 from ..auth import login_user
 
 
@@ -24,8 +23,14 @@ class BaseApiTestCase(unittest.TestCase):
         self.ctx = app.test_request_context()
         self.ctx.push()
         self.user = User.create('marv', 'pass')
+        # admin user
         user = User.create('admin', 'pass')
-        self.user_admin = User.edit(user.id, is_admin=True)
+        User.edit(user.id, is_admin=True)
+        self.user_admin = User.get(user.id)
+
+    def tearDown(self):
+        redis.flushdb()
+        self.ctx.pop()
 
     def login(self, admin=False):
         data = {'username': self.user.username, 'password': 'pass'}
@@ -33,22 +38,25 @@ class BaseApiTestCase(unittest.TestCase):
             data['username'] = self.user_admin.username
         self.post('/api/login/', data)
 
-    def tearDown(self):
-        redis.flushdb()
-        self.ctx.pop()
-
-    #  a client get helper
+    #  test client get helper
     def get(self, url, headers={}, **kwargs):
         headers['Content-Type'] = 'application/json'
         resp = self.client.get(url, headers=headers, **kwargs)
         resp.json = json.loads(resp.data)
         return resp
 
-    #  a client post helper
+    #  test client post helper
     def post(self, url, data, headers={}, **kwargs):
         headers['Content-Type'] = 'application/json'
         data = json.dumps(data)
         resp = self.client.post(url, headers=headers, data=data, **kwargs)
+        resp.json = json.loads(resp.data)
+        return resp
+
+    def put(self, url, data, headers={}, **kwargs):
+        headers['Content-Type'] = 'application/json'
+        data = json.dumps(data)
+        resp = self.client.put(url, headers=headers, data=data, **kwargs)
         resp.json = json.loads(resp.data)
         return resp
 
@@ -121,17 +129,29 @@ class CategoryTestCase(BaseApiTestCase):
         super(CategoryTestCase, self).setUp()
         self.category = Category.create(title='test category')
         self.category2 = Category.create(title='test category2')
+        self.sub = Sub.create(self.category, 'test sub', 'sub description')
+        self.sub2 = Sub.create(self.category, 'test sub2', 'sub description2')
 
     def test_get_list_view(self):
-        resp = self.get('/api/category/')
+        resp = self.get(url_for('api.category'))
+
         assert len(resp.json) == 2
+        assert len(resp.json[1]['subs']) == 2
+        assert len(resp.json[0]['subs']) == 0
+
         assert resp.json[1]['title'] == 'test category'
         assert resp.json[1]['id'] == self.category.id
+        assert resp.json[1]['subs'][1]['title'] == self.sub.title
+        assert resp.json[1]['subs'][1]['description'] == self.sub.description
 
     def test_get_detail_view(self):
         resp = self.get(url_for('api.category', id=self.category.id))
         assert resp.json['title'] == self.category.title
         assert resp.json['id'] == int(self.category.id)
+        assert len(resp.json['subs']) == 2
+
+        resp = self.get(url_for('api.category', id=self.category2.id))
+        assert len(resp.json['subs']) == 0
 
     def test_post_category(self):
         with self.client:
@@ -140,6 +160,32 @@ class CategoryTestCase(BaseApiTestCase):
                              {'title':'category_title'})
             assert resp.status_code == 201, resp.data
             assert resp.json['title'] == 'category_title'
+            assert Category.get(resp.json['id'])['title'] == resp.json['title']
+
+    def test_post_category_missing_data(self):
+        with self.client:
+            self.login(admin=True)
+            resp = self.post(url_for('api.category'), {})
+            assert resp.status_code == 400
+
+    # def test_post_category_exists(self):
+    #     with self.client:
+    #         self.login(admin=True)
 
     def test_put_category(self):
-        pass
+        with self.client:
+            self.login(admin=True)
+            print url_for('api.category', id=self.category.id)
+
+            resp = self.put(url_for('api.category', id=self.category.id),
+                                    {'title': 'changed'})
+            assert 0==3, resp
+            assert resp.json['title'] == 'changed'
+            assert Category.get(self.category.id)['title']  == 'changed'
+
+    # def test_put_category_404(self):
+    #     with self.client:
+    #         self.login(admin=True)
+    #         resp = self.put(url_for('api.category', id=self.category.id), {})
+    #         assert resp.status_code == 404, resp
+

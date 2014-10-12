@@ -77,7 +77,7 @@ class CategoryView(BaseMethodView):
             return self.error('Category exists', 409)
         return category, 201
 
-    def put(self, id):
+    def put(self):
         title = request.json.get('title')
         if not title:
             return bad_request('missing title')
