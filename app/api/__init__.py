@@ -1,1 +1,1 @@
-from .views import api, forum, user
+from .views import api, main, user, category
