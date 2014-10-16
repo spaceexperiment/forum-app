@@ -154,38 +154,44 @@ class CategoryTestCase(BaseApiTestCase):
         assert len(resp.json['subs']) == 0
 
     def test_post_category(self):
-        with self.client:
-            self.login(admin=True)
-            resp = self.post(url_for('api.category'),
-                             {'title':'category_title'})
-            assert resp.status_code == 201, resp.data
-            assert resp.json['title'] == 'category_title'
-            assert Category.get(resp.json['id'])['title'] == resp.json['title']
+        self.login(admin=True)
+        resp = self.post(url_for('api.category'),
+                         {'title':'category_title'})
+        assert resp.status_code == 201, resp.data
+        assert resp.json['title'] == 'category_title'
+        assert Category.get(resp.json['id'])['title'] == resp.json['title']
 
     def test_post_category_missing_data(self):
-        with self.client:
-            self.login(admin=True)
-            resp = self.post(url_for('api.category'), {})
-            assert resp.status_code == 400
+        self.login(admin=True)
+        resp = self.post(url_for('api.category'), {})
+        assert resp.status_code == 400
 
-    # def test_post_category_exists(self):
-    #     with self.client:
-    #         self.login(admin=True)
+    def test_post_category_exists(self):
+        self.login(admin=True)
+        self.post(url_for('api.category'),
+                         {'title':'category_title'})
+        # post same data again
+        resp = self.post(url_for('api.category'),
+                         {'title':'category_title'})
+        assert resp.status_code == 409
 
     def test_put_category(self):
-        with self.client:
-            self.login(admin=True)
-            print url_for('api.category', id=self.category.id)
+        self.login(admin=True)
 
-            resp = self.put(url_for('api.category', id=self.category.id),
-                                    {'title': 'changed'})
-            assert 0==3, resp
-            assert resp.json['title'] == 'changed'
-            assert Category.get(self.category.id)['title']  == 'changed'
+        resp = self.put(url_for('api.category', id=self.category.id),
+                                {'title': 'changed'})
+        assert resp.json['title'] == 'changed'
+        assert Category.get(self.category.id)['title']  == 'changed'
 
-    # def test_put_category_404(self):
-    #     with self.client:
-    #         self.login(admin=True)
-    #         resp = self.put(url_for('api.category', id=self.category.id), {})
-    #         assert resp.status_code == 404, resp
+    def test_put_category_bad_request(self):
+        self.login(admin=True)
+        resp = self.put(url_for('api.category', id=self.category.id), {})
+        # 400 bad request because title not in post data
+        assert resp.status_code == 400, resp
+
+    def test_put_category_404(self):
+        self.login(admin=True)
+        # bad id
+        resp = self.put(url_for('api.category', id=2949), {'title': 'test'})
+        assert resp.status_code == 404, resp
 
