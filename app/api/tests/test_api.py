@@ -38,14 +38,14 @@ class BaseApiTestCase(unittest.TestCase):
             data['username'] = self.user_admin.username
         self.post('/api/login/', data)
 
-    #  test client get helper
+    #  client get helper
     def get(self, url, headers={}, **kwargs):
         headers['Content-Type'] = 'application/json'
         resp = self.client.get(url, headers=headers, **kwargs)
         resp.json = json.loads(resp.data)
         return resp
 
-    #  test client post helper
+    #  client post helper
     def post(self, url, data, headers={}, **kwargs):
         headers['Content-Type'] = 'application/json'
         data = json.dumps(data)
@@ -57,6 +57,12 @@ class BaseApiTestCase(unittest.TestCase):
         headers['Content-Type'] = 'application/json'
         data = json.dumps(data)
         resp = self.client.put(url, headers=headers, data=data, **kwargs)
+        resp.json = json.loads(resp.data)
+        return resp
+
+    def delete(self, url, headers={}, **kwargs):
+        headers['Content-Type'] = 'application/json'
+        resp = self.client.delete(url, headers=headers, **kwargs)
         resp.json = json.loads(resp.data)
         return resp
 
@@ -177,7 +183,6 @@ class CategoryTestCase(BaseApiTestCase):
 
     def test_put_category(self):
         self.login(admin=True)
-
         resp = self.put(url_for('api.category', id=self.category.id),
                                 {'title': 'changed'})
         assert resp.json['title'] == 'changed'
@@ -195,3 +200,8 @@ class CategoryTestCase(BaseApiTestCase):
         resp = self.put(url_for('api.category', id=2949), {'title': 'test'})
         assert resp.status_code == 404, resp
 
+    def test_delete_category(self):
+        self.login(admin=True)
+        resp = self.delete(url_for('api.category', id=self.category.id))
+        assert resp.status_code == 200
+        assert not Category.get(self.category.id)

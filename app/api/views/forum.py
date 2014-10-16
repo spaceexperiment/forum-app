@@ -79,6 +79,7 @@ class CategoryView(BaseMethodView):
         return category, 201
 
     def put(self, id=None):
+        self.is_admin()
         title = request.json.get('title')
         if not title:
             return self.bad_request('missing title')
@@ -88,12 +89,12 @@ class CategoryView(BaseMethodView):
         return category, 200
 
     def delete(self, id=None):
-        id = request.json.get('id')
-        if not id:
-            return bad_request('missing id')
-        category = Category.get(id)
-        if category:
-            Category.delete(id)
+        self.is_admin()
+        if id:
+            category = Category.get(id)
+        if not id or not category:
+            abort(404)
+        Category.delete(id)
         return '', 200
 
 
