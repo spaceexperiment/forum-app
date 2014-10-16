@@ -49,6 +49,7 @@ class BaseMethodView(MethodView):
         return None
 
 
+
 class CategoryView(BaseMethodView):
 
     def get(self, id=None):
@@ -77,16 +78,16 @@ class CategoryView(BaseMethodView):
             return self.error('Category exists', 409)
         return category, 201
 
-    def put(self):
+    def put(self, id=None):
         title = request.json.get('title')
         if not title:
-            return bad_request('missing title')
+            return self.bad_request('missing title')
         if not Category.get(id):
             return abort(404)
         category = Category.edit(id, title=title)
         return category, 200
 
-    def delete(self, id):
+    def delete(self, id=None):
         id = request.json.get('id')
         if not id:
             return bad_request('missing id')
@@ -94,10 +95,9 @@ class CategoryView(BaseMethodView):
         if category:
             Category.delete(id)
         return '', 200
-            
 
 
 view = CategoryView.as_view('category')
-api.add_url_rule('/category/', view_func=view, methods=['GET', 'POST'])
+api.add_url_rule('/category/',view_func=view, methods=['GET', 'POST', ])
 api.add_url_rule('/category/<int:id>/', view_func=view,
                  methods=['GET', 'PUT', 'DELETE'])
