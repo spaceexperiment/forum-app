@@ -286,7 +286,8 @@ class Category(BaseModel):
 
     @classmethod
     def edit(cls, _id, link='title', **fields):
-        return super(Category, cls).edit(_id=_id, link=link, **fields)
+        super(Category, cls).edit(_id=_id, link=link, **fields)
+        return cls.get(_id)
 
 
 class Sub(BaseModel):
