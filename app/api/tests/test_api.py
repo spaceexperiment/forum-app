@@ -205,3 +205,8 @@ class CategoryTestCase(BaseApiTestCase):
         resp = self.delete(url_for('api.category', id=self.category.id))
         assert resp.status_code == 200
         assert not Category.get(self.category.id)
+
+
+class SubTestCase(unittest.TestCase):
+    super(SubTestCase, self).setUp()
+    
