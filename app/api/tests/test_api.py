@@ -208,5 +208,7 @@ class CategoryTestCase(BaseApiTestCase):
 
 
 class SubTestCase(unittest.TestCase):
-    super(SubTestCase, self).setUp()
+
+    def setUp(self):
+        super(SubTestCase, self).setUp()
     
