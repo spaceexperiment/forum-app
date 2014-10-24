@@ -262,6 +262,7 @@ class SubTestCase(BaseApiTestCase):
 
         assert resp.status_code == 409
 
-    # def test_get_detail_view(self):
-    #     resp = self.get(url_for('api.sub', id=self.sub.id))
-    #     assert self.sub  in [resp.json]
+    def test_get_detail_view(self):
+        resp = self.get(url_for('api.sub_detail', id=self.sub.id))
+        assert resp.json == self.sub, self.sub
+

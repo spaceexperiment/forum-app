@@ -8,7 +8,7 @@ from .main import BaseMethodView
 
 class SubListView(BaseMethodView):
 
-    def get(self,):
+    def get(self):
         _subs = Sub.all()
         subs = []
         for sub in _subs:
@@ -39,8 +39,24 @@ class SubListView(BaseMethodView):
         return sub, 201
 
 
+class SubDetailView(BaseMethodView):
+
+    def get(self, id):
+        sub = Sub.get(id)
+        if not sub:
+            abort(404)
+        sub.threads = Sub.get_threads(sub.id)
+        return sub
+
+    def put(self, id):
+        pass
+
+    def delete(self, id):
+        pass
+
+
 list_view = SubListView.as_view('sub_list')
-# detail_view = SubDetailView.as_view('sub_detail')
+detail_view = SubDetailView.as_view('sub_detail')
 api.add_url_rule('/sub/', view_func=list_view, methods=['GET', 'POST'])
-# api.add_url_rule('/sub/<int:id>/', view_func=detail_view,
-#                  methods=['GET', 'PUT', 'DELETE'])
+api.add_url_rule('/sub/<int:id>/', view_func=detail_view,
+                 methods=['GET', 'PUT', 'DELETE'])
