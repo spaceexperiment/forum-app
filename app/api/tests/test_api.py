@@ -153,7 +153,7 @@ class CategoryTestCase(BaseApiTestCase):
     def test_get_detail_view(self):
         resp = self.get(url_for('api.category', id=self.category.id))
         assert resp.json['title'] == self.category.title
-        assert resp.json['id'] == int(self.category.id)
+        assert resp.json['id'] == self.category.id
         assert len(resp.json['subs']) == 2
 
         resp = self.get(url_for('api.category', id=self.category2.id))

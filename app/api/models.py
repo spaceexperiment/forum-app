@@ -111,7 +111,7 @@ class BaseModel(object):
         key = rkey(cls, _id)
         obj = redis.hgetall(key)
         if obj:
-            obj['id'] = _id
+            obj['id'] = str(_id)
             return AttrDict(obj)
         return None
 
