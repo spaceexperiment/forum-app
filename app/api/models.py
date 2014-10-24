@@ -347,7 +347,8 @@ class Sub(BaseModel):
 
     @classmethod
     def edit(cls, _id, link='title', **fields):
-        return super(Sub, cls).edit(_id=_id, link=link, **fields)
+        super(Sub, cls).edit(_id=_id, link=link, **fields)
+        return cls.get(_id)
 
 
 class Thread(BaseModel):
