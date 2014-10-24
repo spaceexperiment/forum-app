@@ -41,10 +41,14 @@ class SubListView(BaseMethodView):
 
 class SubDetailView(BaseMethodView):
 
-    def get(self, id):
+    def get_or_404(self, id):
         sub = Sub.get(id)
         if not sub:
             abort(404)
+        return sub
+
+    def get(self, id):
+        sub = self.get_or_404(id)
         sub.threads = Sub.get_threads(sub.id)
         return sub
 

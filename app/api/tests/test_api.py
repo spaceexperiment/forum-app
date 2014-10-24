@@ -266,3 +266,8 @@ class SubTestCase(BaseApiTestCase):
         resp = self.get(url_for('api.sub_detail', id=self.sub.id))
         assert resp.json == self.sub, self.sub
 
+    def test_get_detail_404(self):
+        resp = self.get(url_for('api.sub_detail', id=1123123))
+        assert resp.status_code == 404
+
+   
