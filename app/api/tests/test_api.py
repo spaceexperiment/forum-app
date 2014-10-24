@@ -162,7 +162,7 @@ class CategoryTestCase(BaseApiTestCase):
     def test_post_category(self):
         self.login(admin=True)
         resp = self.post(url_for('api.category'),
-                         {'title':'category_title'})
+                         {'title': 'category_title'})
         assert resp.status_code == 201, resp.data
         assert resp.json['title'] == 'category_title'
         assert Category.get(resp.json['id'])['title'] == resp.json['title']
@@ -175,18 +175,18 @@ class CategoryTestCase(BaseApiTestCase):
     def test_post_category_exists(self):
         self.login(admin=True)
         self.post(url_for('api.category'),
-                         {'title':'category_title'})
+                  {'title': 'category_title'})
         # post same data again
         resp = self.post(url_for('api.category'),
-                         {'title':'category_title'})
+                         {'title': 'category_title'})
         assert resp.status_code == 409
 
     def test_put_category(self):
         self.login(admin=True)
         resp = self.put(url_for('api.category', id=self.category.id),
-                                {'title': 'changed'})
+                        {'title': 'changed'})
         assert resp.json['title'] == 'changed'
-        assert Category.get(self.category.id)['title']  == 'changed'
+        assert Category.get(self.category.id)['title'] == 'changed'
 
     def test_put_category_bad_request(self):
         self.login(admin=True)
@@ -207,8 +207,61 @@ class CategoryTestCase(BaseApiTestCase):
         assert not Category.get(self.category.id)
 
 
-class SubTestCase(unittest.TestCase):
+class SubTestCase(BaseApiTestCase):
 
     def setUp(self):
         super(SubTestCase, self).setUp()
-    
+        self.category = Category.create(title='test category')
+        self.category2 = Category.create(title='test category2')
+        self.sub = Sub.create(self.category, 'test sub', 'sub description')
+        self.sub2 = Sub.create(self.category, 'test sub2', 'sub description2')
+        self.sub.threads = Sub.get_threads(self.sub)
+        self.sub2.threads = Sub.get_threads(self.sub2)
+
+    def test_get_list_view(self):
+        resp = self.get(url_for('api.sub_list'))
+
+        assert len(resp.json) == 2
+        assert self.sub in resp.json
+        assert self.sub2 in resp.json
+
+    def test_post_sub(self):
+        self.login(admin=True)
+        data = {
+            'category': self.category.id,
+            'title': 'post sub title',
+            'description': 'post sub description'
+        }
+        resp = self.post(url_for('api.sub_list'), data=data)
+
+        assert resp.status_code == 201
+        assert resp.json['title'] == data['title']
+        assert resp.json['description'] == data['description']
+        assert resp.json['category'] == data['category']
+
+    def test_post_sub_missing_data(self):
+        self.login(admin=True)
+        resp = self.post(url_for('api.sub_list'), data={})
+
+        assert resp.status_code == 400
+        # message = 'missing category and title'
+        assert 'category' in resp.json['message']
+        assert 'title' in resp.json['message']
+
+    def test_post_sub_category_notfound(self):
+        self.login(admin=True)
+        data = {'category': '1231231121', 'title': 'post sub title'}
+        resp = self.post(url_for('api.sub_list'), data=data)
+
+        assert resp.status_code == 404
+
+    def test_post_sub_exists(self):
+        self.login(admin=True)
+        data = {'category': self.category.id, 'title': self.sub.title}
+        resp = self.post(url_for('api.sub_list'), data=data)
+
+        assert resp.status_code == 409
+
+    # def test_get_detail_view(self):
+    #     resp = self.get(url_for('api.sub', id=self.sub.id))
+    #     assert self.sub  in [resp.json]
