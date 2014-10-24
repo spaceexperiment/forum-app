@@ -33,7 +33,7 @@ class BaseMethodView(MethodView):
 
     def missing_data(self, data):
         """
-        return True if data in request.json else return 400 with
+        return None if data in request.json else return 400 with
         missing data in message
         param data: a list of strings of requered fields
         """
