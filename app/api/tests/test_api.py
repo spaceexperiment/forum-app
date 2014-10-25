@@ -270,4 +270,30 @@ class SubTestCase(BaseApiTestCase):
         resp = self.get(url_for('api.sub_detail', id=1123123))
         assert resp.status_code == 404
 
-   
+    def test_put_sub(self):
+        self.login(admin=True)
+        resp = self.put(url_for('api.sub_detail', id=self.sub.id),
+                        {'title': 'changed', 'description': 'changed'})
+
+        sub = Sub.get(self.sub.id)
+        assert resp.status_code == 200
+        assert sub.title == 'changed'
+        assert sub.description == 'changed'
+
+    def test_put_sub_bad_request(self):
+        self.login(admin=True)
+        # missing post data
+        resp = self.put(url_for('api.sub_detail', id=self.sub.id), {})
+        assert resp.status_code == 400
+
+    def test_put_sub_404(self):
+        self.login(admin=True)
+        # bad id
+        resp = self.put(url_for('api.sub_detail', id=2949), {'title': 'test'})
+        assert resp.status_code == 404, resp
+
+    def test_delete_sub(self):
+        self.login(admin=True)
+        resp = self.delete(url_for('api.sub_detail', id=self.sub.id))
+        assert resp.status_code == 200
+        assert not Sub.get(self.sub.id)

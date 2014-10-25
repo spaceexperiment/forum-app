@@ -53,10 +53,20 @@ class SubDetailView(BaseMethodView):
         return sub
 
     def put(self, id):
-        pass
+        self.is_admin()
+        sub = self.get_or_404(id)
+
+        missing_data = self.missing_data(['title'])
+        if missing_data:
+            return missing_data
+
+        sub = Sub.edit(id, **request.json)
+        return sub, 200
 
     def delete(self, id):
-        pass
+        self.get_or_404(id)
+        Sub.delete(id)
+        return '', 200
 
 
 list_view = SubListView.as_view('sub_list')
