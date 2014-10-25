@@ -2,7 +2,6 @@ import os
 from time import time
 from base64 import b64encode
 
-
 from app import redis
 from .helpers import hash_pass
 from .structures import AttrDict
