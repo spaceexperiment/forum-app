@@ -342,7 +342,6 @@ class ThreadTestCase(BaseApiTestCase):
         resp = self.get(url_for('api.thread_detail', id=123123))
         assert not self.thread == resp.json
 
-
     def test_delete_thread_admin(self):
         self.login(admin=True)
         resp = self.delete(url_for('api.thread_detail', id=self.thread.id))
