@@ -406,7 +406,7 @@ class Thread(BaseModel):
         key = '{}:posts'.format(thread.id)
         start = (page - 1) * count
         post_ids = redis.zrange(key, start, start + (count - 1), desc=True)
-        return [cls.get(_id) for _id in post_ids]
+        return [Post.get(_id) for _id in post_ids]
 
     @classmethod
     def link_post(cls, thread_id, post_id):
