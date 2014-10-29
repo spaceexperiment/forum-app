@@ -311,7 +311,7 @@ class ThreadTestCase(BaseApiTestCase):
 
         thread = Thread(user=self.user, sub=self.sub)
         self.thread = thread.create('thread title', 'thread body')
-        self.threa2 = thread.create('thread title2', 'thread body2')
+        self.thread2 = thread.create('thread title2', 'thread body2')
 
         thread = Thread(user=self.user, sub=self.sub2)
         self.thread3 = thread.create('thread title', 'thread body')
@@ -319,11 +319,16 @@ class ThreadTestCase(BaseApiTestCase):
         self.sub.threads = Sub.get_threads(self.sub)
         self.sub2.threads = Sub.get_threads(self.sub2)
 
+        post = Post(user=self.user, thread=self.thread)
+        self.post1 = post.create('test body')
+        self.post2 = post.create('test body')
+        self.thread.posts = Thread.posts(self.thread)
+
     def test_get_list(self):
         resp = self.get(url_for('api.thread_list'))
 
         assert len(resp.json) == 3
-        assert self.thread in resp.json
+        assert self.thread2 in resp.json
 
     def test_get_list_count_2(self):        
         resp = self.get(url_for('api.thread_list', count=2))

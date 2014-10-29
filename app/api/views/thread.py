@@ -24,6 +24,10 @@ class ThreadDetailView(BaseMethodView):
         thread = Thread.get(id)
         if not thread:
             abort(404)
+
+        page = request.args.get('page', 1)
+        count = request.args.get('count', 10)
+        thread.posts = Thread.posts(thread, page=page, count=count)
         return thread
 
     def is_user_thread(self, thread):
