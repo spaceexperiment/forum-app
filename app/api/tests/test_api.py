@@ -319,4 +319,20 @@ class ThreadTestCase(BaseApiTestCase):
         self.sub.threads = Sub.get_threads(self.sub)
         self.sub2.threads = Sub.get_threads(self.sub2)
 
+    def test_get_list(self):
+        resp = self.get(url_for('api.thread_list'))
+
+        assert len(resp.json) == 3
+        assert self.thread in resp.json
+
+    def test_get_list_count_2(self):        
+        resp = self.get(url_for('api.thread_list', count=2))
+        assert len(resp.json) == 2
+
+    def test_get_detail(self):
+        pass
+        # resp = self.get(url_for('api.thread_detail', id=self.thread.id))
+        # assert self.thread == resp.json
+
+
     

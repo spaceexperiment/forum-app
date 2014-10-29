@@ -9,7 +9,10 @@ from .main import BaseMethodView
 class ThreadListView(BaseMethodView):
 
     def get(self):
-        pass
+        page = request.args.get('page', 1)
+        count = request.args.get('count', 10)
+        threads = Thread.all(page=int(page), count=int(count))
+        return threads
 
     def post(self):
         pass
@@ -27,8 +30,8 @@ class ThreadDetailView(BaseMethodView):
         pass
 
 
-list_view = threadListView.as_view('thread_list')
-detail_view = threadDetailView.as_view('thread_detail')
+list_view = ThreadListView.as_view('thread_list')
+detail_view = ThreadDetailView.as_view('thread_detail')
 api.add_url_rule('/thread/', view_func=list_view, methods=['GET', 'POST'])
 api.add_url_rule('/thread/<int:id>/', view_func=detail_view,
                  methods=['GET', 'PUT', 'DELETE'])
