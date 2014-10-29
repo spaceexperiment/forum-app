@@ -394,12 +394,19 @@ class Thread(BaseModel):
         return User._field_values(key)
 
     @classmethod
-    def delete(self, _id):
+    def delete(cls, _id):
         thread = Thread.get(_id)
-        self._link_id_delete(thread.title)
+        cls._link_id_delete(thread.title)
         Sub.unlink_thread(thread.sub, _id)
         User.unlink_thread(thread.user.id, _id)
-        return super(Thread, self).delete(_id)
+        return super(Thread, cls).delete(_id)
+
+    @classmethod
+    def posts(cls, thread, count=10, page=1):
+        key = '{}:posts'.format(thread.id)
+        start = (page - 1) * count
+        post_ids = redis.zrange(key, start, start + (count - 1), desc=True)
+        return [cls.get(_id) for _id in post_ids]
 
     @classmethod
     def link_post(cls, thread_id, post_id):
