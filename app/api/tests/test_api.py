@@ -389,3 +389,20 @@ class ThreadTestCase(BaseApiTestCase):
         data = {'sub': self.sub.id, 'title': 'test', 'body': '<p>dokasd'}
         resp = self.post(url_for('api.thread_list'), data)
         assert resp.status_code == 400
+
+    def test_put_thread(self):
+        self.login()
+        data = {'title': 'changed', 'body': 'changed'}
+        resp = self.put(url_for('api.thread_detail', id=self.thread.id), data)
+        assert resp.status_code == 200
+
+        thread = Thread.get(self.thread.id)
+        assert thread.title == data['title']
+        assert thread.body == data['body']
+
+    def test_put_thread_clean_data(self):
+        self.login()
+        data = {'wrong_field': 'changed'}
+        resp = self.put(url_for('api.thread_detail', id=self.thread.id), data)
+        thread = Thread.get(self.thread.id)
+        assert not thread.wrong_field

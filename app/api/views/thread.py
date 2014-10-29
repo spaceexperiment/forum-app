@@ -54,7 +54,14 @@ class ThreadDetailView(BaseMethodView):
         return thread
 
     def put(self, id):
-        pass
+        self.is_authenticated()
+        thread = self.get_or_404(id)
+        if not self.is_user_thread(thread):
+            abort(401)
+
+        data = self.clean_data(['title', 'body'])
+        thread = Thread.edit(id, **data)
+        return thread, 200
 
     def delete(self, id):
         self.is_authenticated()
