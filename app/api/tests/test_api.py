@@ -361,5 +361,31 @@ class ThreadTestCase(BaseApiTestCase):
         resp = self.delete(url_for('api.thread_detail', id=self.thread.id))
         assert resp.status_code == 401
 
+    def test_post_thread(self):
+        self.login()
+        data = {
+            'sub': self.sub.id,
+            'title': 'thread title',
+            'body': 'oskd<p>d</p>'
+        }
+        resp = self.post(url_for('api.thread_list'), data)
+        assert resp.status_code == 201
 
+        thread = Thread.get(resp.json['id'])
+        assert thread.title == data['title']
+        assert thread.body == data['body']
+        assert thread.sub == self.sub.id
+        assert thread.user.id == self.user.id
 
+    def test_post_thread_wrong_sub(self):
+        self.login()
+        data = {'sub': 131231, 'title': '', 'body': ''}
+        resp = self.post(url_for('api.thread_list'), data)
+        assert resp.status_code == 404
+
+    def test_post_thread_malformed_body(self):
+        self.login()
+        # open ended <p> tag
+        data = {'sub': self.sub.id, 'title': 'test', 'body': '<p>dokasd'}
+        resp = self.post(url_for('api.thread_list'), data)
+        assert resp.status_code == 400

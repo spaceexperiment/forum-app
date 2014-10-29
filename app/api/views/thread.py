@@ -1,9 +1,10 @@
 from flask import request, session, g, redirect, url_for, abort
 
 from . import api
-from ..exceptions import ThreadExistsError
-from ..models import Sub, Thread
 from .main import BaseMethodView
+from ..models import Sub, Thread
+from ..helpers import is_complete_tags
+from ..exceptions import ThreadExistsError
 
 
 class ThreadListView(BaseMethodView):
@@ -15,7 +16,23 @@ class ThreadListView(BaseMethodView):
         return threads
 
     def post(self):
-        pass
+        self.is_authenticated()
+        missing_data = self.missing_data(['sub', 'title', 'body'])
+        if missing_data:
+            return missing_data
+        data = request.json
+
+        sub = Sub.get(data['sub'])
+        if not sub:
+            abort(404)
+
+        print data['body']
+        if not is_complete_tags(data['body']):
+            return self.bad_request('malformed body data')
+
+        instance = Thread(g.user, sub)
+        thread = instance.create(data['title'], data['body'])
+        return thread, 201
 
 
 class ThreadDetailView(BaseMethodView):
