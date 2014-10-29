@@ -26,7 +26,6 @@ class ThreadListView(BaseMethodView):
         if not sub:
             abort(404)
 
-        print data['body']
         if not is_complete_tags(data['body']):
             return self.bad_request('malformed body data')
 
