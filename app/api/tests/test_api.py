@@ -329,9 +329,14 @@ class ThreadTestCase(BaseApiTestCase):
         resp = self.get(url_for('api.thread_list', count=2))
         assert len(resp.json) == 2
 
-    def test_get_detail(self):
+    def test_get_thread(self):
         resp = self.get(url_for('api.thread_detail', id=self.thread.id))
         assert self.thread == resp.json
+
+    def test_get_thread_404(self):
+        resp = self.get(url_for('api.thread_detail', id=123123))
+        assert not self.thread == resp.json
+
 
     def test_delete_thread_admin(self):
         self.login(admin=True)
