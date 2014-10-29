@@ -330,7 +330,7 @@ class ThreadTestCase(BaseApiTestCase):
         assert len(resp.json) == 3
         assert self.thread2 in resp.json
 
-    def test_get_list_count_2(self):        
+    def test_get_list_count_2(self):
         resp = self.get(url_for('api.thread_list', count=2))
         assert len(resp.json) == 2
 
@@ -406,3 +406,32 @@ class ThreadTestCase(BaseApiTestCase):
         resp = self.put(url_for('api.thread_detail', id=self.thread.id), data)
         thread = Thread.get(self.thread.id)
         assert not thread.wrong_field
+
+
+class PostTestCase(BaseApiTestCase):
+
+    def setUp(self):
+        super(ThreadTestCase, self).setUp()
+        self.category = Category.create(title='test category')
+        self.category2 = Category.create(title='test category2')
+
+        self.sub = Sub.create(self.category, 'test sub', 'sub description')
+        self.sub2 = Sub.create(self.category, 'test sub2', 'sub description2')
+
+        thread = Thread(user=self.user, sub=self.sub)
+        self.thread = thread.create('thread title', 'thread body')
+        self.thread2 = thread.create('thread title2', 'thread body2')
+
+        thread = Thread(user=self.user, sub=self.sub2)
+        self.thread3 = thread.create('thread title', 'thread body')
+
+        self.sub.threads = Sub.get_threads(self.sub)
+        self.sub2.threads = Sub.get_threads(self.sub2)
+
+        post = Post(user=self.user, thread=self.thread)
+        self.post1 = post.create('test body')
+        self.post2 = post.create('test body')
+        self.thread.posts = Thread.posts(self.thread)
+
+    def test_get_list(self):
+        pass
