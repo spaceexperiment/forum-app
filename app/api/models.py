@@ -365,6 +365,13 @@ class Thread(BaseModel):
             return obj
         return None
 
+    @classmethod
+    def all(cls, count=10, page=1):
+        key = 'thread:all'
+        start = (page - 1) * count
+        thread_ids = redis.zrange(key, start, start + (count - 1), desc=True)
+        return [cls.get(_id) for _id in thread_ids]
+
     def create(self, title, body):
         _id = self._gen_id()
         self.set(
