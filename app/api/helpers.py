@@ -13,7 +13,7 @@ def is_complete_tags(feed):
     parser = ParseCompleteHTMLTags()
     parser.feed(feed)
     parser.close()
-    if parser._error:
+    if parser._error or parser.start_tags:
         return False
     return True
 
