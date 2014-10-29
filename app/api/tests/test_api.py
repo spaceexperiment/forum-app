@@ -330,9 +330,8 @@ class ThreadTestCase(BaseApiTestCase):
         assert len(resp.json) == 2
 
     def test_get_detail(self):
-        pass
-        # resp = self.get(url_for('api.thread_detail', id=self.thread.id))
-        # assert self.thread == resp.json
+        resp = self.get(url_for('api.thread_detail', id=self.thread.id))
+        assert self.thread == resp.json
 
 
     

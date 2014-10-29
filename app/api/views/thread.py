@@ -20,8 +20,14 @@ class ThreadListView(BaseMethodView):
 
 class ThreadDetailView(BaseMethodView):
 
+    def get_or_404(self, id):
+        thread = Thread.get(id)
+        if not thread:
+            abort(404)
+        return thread
+
     def get(self, id):
-        pass
+        return self.get_or_404(id)
 
     def put(self, id):
         pass
