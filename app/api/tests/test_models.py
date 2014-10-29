@@ -558,7 +558,7 @@ class ThreadModelTestCase(unittest.TestCase):
         key2 = 'user:{}:threads'.format(user.id)
         assert _thread.id in redis.zrange(key1, 0, -1)
         assert _thread.id in redis.zrange(key2, 0, -1)
-        thread.delete(_thread.id)
+        models.Thread.delete(_thread.id)
         assert not models.Thread.get(_thread.id)
         assert _thread.id not in redis.zrange(key1, 0, -1)
         assert _thread.id not in redis.zrange(key2, 0, -1)

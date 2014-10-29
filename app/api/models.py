@@ -393,11 +393,12 @@ class Thread(BaseModel):
         key = '{}:threads'.format(self.user.id)
         return User._field_values(key)
 
+    @classmethod
     def delete(self, _id):
         thread = Thread.get(_id)
         self._link_id_delete(thread.title)
-        Sub.unlink_thread(self.sub.id, _id)
-        User.unlink_thread(self.user.id, _id)
+        Sub.unlink_thread(thread.sub, _id)
+        User.unlink_thread(thread.user.id, _id)
         return super(Thread, self).delete(_id)
 
     @classmethod
