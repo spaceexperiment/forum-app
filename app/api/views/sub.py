@@ -64,6 +64,7 @@ class SubDetailView(BaseMethodView):
         return sub, 200
 
     def delete(self, id):
+        self.is_admin()
         self.get_or_404(id)
         Sub.delete(id)
         return '', 200
