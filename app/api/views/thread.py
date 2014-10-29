@@ -26,6 +26,10 @@ class ThreadDetailView(BaseMethodView):
             abort(404)
         return thread
 
+    def is_user_thread(self, thread):
+        if g.user.id == thread.user.id or g.user.is_admin == 'True':
+            return True
+
     def get(self, id):
         return self.get_or_404(id)
 
@@ -33,7 +37,12 @@ class ThreadDetailView(BaseMethodView):
         pass
 
     def delete(self, id):
-        pass
+        self.is_authenticated()
+        thread = self.get_or_404(id)
+        if self.is_user_thread(thread):
+            Thread.delete(id)
+            return '', 200
+        abort(401)
 
 
 list_view = ThreadListView.as_view('thread_list')

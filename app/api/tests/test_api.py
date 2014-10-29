@@ -333,5 +333,24 @@ class ThreadTestCase(BaseApiTestCase):
         resp = self.get(url_for('api.thread_detail', id=self.thread.id))
         assert self.thread == resp.json
 
+    def test_delete_thread_admin(self):
+        self.login(admin=True)
+        resp = self.delete(url_for('api.thread_detail', id=self.thread.id))
+        assert resp.status_code == 200
+        assert not Thread.get(self.thread.id)
 
-    
+    def test_delete_thread_user(self):
+        self.login()
+        resp = self.delete(url_for('api.thread_detail', id=self.thread.id))
+        assert resp.status_code == 200
+        assert not Thread.get(self.thread.id)
+
+    def test_delete_thread_other_user(self):
+        user = User.create('test2', 'pass')
+        data = {'username': user.username, 'password': 'pass'}
+        self.post('/api/login/', data)
+        resp = self.delete(url_for('api.thread_detail', id=self.thread.id))
+        assert resp.status_code == 401
+
+
+
