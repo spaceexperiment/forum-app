@@ -46,8 +46,8 @@ class PostDetailView(BaseMethodView):
         abort(401)
 
 
-list_view = ThreadListView.as_view('post_list')
-detail_view = ThreadDetailView.as_view('post_detail')
+list_view = PostListView.as_view('post_list')
+detail_view = PostDetailView.as_view('post_detail')
 api.add_url_rule('/post/', view_func=list_view, methods=['GET', 'POST'])
 api.add_url_rule('/post/<int:id>/', view_func=detail_view,
                  methods=['GET', 'PUT', 'DELETE'])
