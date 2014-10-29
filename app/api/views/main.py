@@ -45,3 +45,11 @@ class BaseMethodView(MethodView):
             message = 'Missing ' + ', '.join(missing_fields)
             return self.bad_request(message)
         return None
+
+    def clean_data(self, fields):
+        data = {}
+        # stip away any key not in fields
+        for key in request.json:
+            if key in fields:
+                data[key] = request.json[key]
+        return data
