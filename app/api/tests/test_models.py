@@ -605,6 +605,6 @@ class PostModelTestCase(unittest.TestCase):
         assert models.Post.get(_post.id)
         key = 'thread:{}:posts'.format(self.thread.id)
         assert _post.id in redis.zrange(key, 0, -1)
-        post.delete(_post.id)
+        models.Post.delete(_post.id)
         assert not models.Post.get(_post.id)
         assert _post.id not in redis.zrange(key, 0, -1)
