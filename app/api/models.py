@@ -434,6 +434,13 @@ class Post(BaseModel):
             return obj
         return None
 
+    @classmethod
+    def all(cls, count=10, page=1):
+        key = 'post:all'
+        start = (page - 1) * count
+        post_ids = redis.zrange(key, start, start + (count - 1), desc=True)
+        return [cls.get(_id) for _id in post_ids]
+
     def create(self, body):
         _id = self._gen_id()
         self.set(
