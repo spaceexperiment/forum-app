@@ -411,7 +411,7 @@ class ThreadTestCase(BaseApiTestCase):
 class PostTestCase(BaseApiTestCase):
 
     def setUp(self):
-        super(ThreadTestCase, self).setUp()
+        super(PostTestCase, self).setUp()
         self.category = Category.create(title='test category')
         self.category2 = Category.create(title='test category2')
 
@@ -434,4 +434,16 @@ class PostTestCase(BaseApiTestCase):
         self.thread.posts = Thread.posts(self.thread)
 
     def test_get_list(self):
-        pass
+        resp = self.get(url_for('api.post_list'))
+        assert len(resp.json) == 2
+        assert self.post1 in resp.json
+        assert self.post2 in resp.json
+
+    def test_get_post(self):
+        resp = self.get(url_for('api.post_detail', id=self.post1.id))
+        assert resp.status_code == 200
+        assert resp.json == self.post1
+
+    def test_get_post_404(self):
+        resp = self.get(url_for('api.post_detail', id=1231231))
+        assert resp.status_code == 404

@@ -11,6 +11,8 @@ class PostListView(BaseMethodView):
     def get(self):
         page = request.args.get('page', 1)
         count = request.args.get('count', 10)
+        posts = Post.all(page=int(page), count=int(count))
+        return posts
 
     def post(self):
         self.is_authenticated()
@@ -29,8 +31,6 @@ class PostDetailView(BaseMethodView):
             return True
 
     def get(self, id):
-        page = request.args.get('page', 1)
-        count = request.args.get('count', 10)
         post = self.get_or_404(id)
         return post
 
