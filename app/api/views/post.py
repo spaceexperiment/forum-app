@@ -41,7 +41,7 @@ class PostDetailView(BaseMethodView):
         self.is_authenticated()
         post = self.get_or_404(id)
         if self.is_user_post(post):
-            post.delete(id)
+            Post.delete(id)
             return '', 200
         abort(401)
 

@@ -447,3 +447,22 @@ class PostTestCase(BaseApiTestCase):
     def test_get_post_404(self):
         resp = self.get(url_for('api.post_detail', id=1231231))
         assert resp.status_code == 404
+
+    def test_delete_post_admin(self):
+        self.login(admin=True)
+        resp = self.delete(url_for('api.post_detail', id=self.post1.id))
+        assert resp.status_code == 200
+        assert not Post.get(self.post1.id)
+
+    def test_delete_thread_user(self):
+        self.login()
+        resp = self.delete(url_for('api.post_detail', id=self.post1.id))
+        assert resp.status_code == 200
+        assert not Post.get(self.post1.id)
+
+    def test_delete_thread_other_user(self):
+        user = User.create('test2', 'pass')
+        data = {'username': user.username, 'password': 'pass'}
+        self.post('/api/login/', data)
+        resp = self.delete(url_for('api.post_detail', id=self.post1.id))
+        assert resp.status_code == 401
