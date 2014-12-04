@@ -27,8 +27,10 @@ class ParseCompleteHTMLTags(HTMLParser):
     </div>                  is Not ok
     """
 
-    start_tags = []
-    _error = False
+    def __init__(self, *args, **kwargs):
+        HTMLParser.__init__(self, *args, **kwargs)
+        self.start_tags = []
+        self._error = False
 
     def handle_starttag(self, tag, attrs):
         if not tag == 'br':
