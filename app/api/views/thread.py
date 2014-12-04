@@ -4,7 +4,6 @@ from . import api
 from .main import BaseMethodView
 from ..models import Sub, Thread
 from ..helpers import is_complete_tags
-from ..exceptions import ThreadExistsError
 
 
 class ThreadListView(BaseMethodView):

@@ -1,7 +1,7 @@
 from flask import request, session, g, redirect, url_for, abort
 
 from . import api
-from ..exceptions import CategoryExistsError
+from ..exceptions import ExistsError
 from ..models import Category
 
 
@@ -31,7 +31,7 @@ class CategoryView(BaseMethodView):
             return missing_data
         try:
             category = Category.create(request.json['title'])
-        except CategoryExistsError:
+        except ExistsError:
             return self.error('Category exists', 409)
         return category, 201
 

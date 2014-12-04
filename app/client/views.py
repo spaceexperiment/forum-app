@@ -1,11 +1,13 @@
+# this module will be deleted
+
+
 from flask import Blueprint, request, session, g, redirect, url_for, abort, \
                   render_template, flash
 
 from app.api.models import User, Session, Thread
 from app.api.auth import auth, login_user, logout_user, is_logged_in
 from app.api.helpers import is_complete_tags
-from app.api.exceptions import UserExistsError, CategoryExistsError,\
-                               SubExistsError, ThreadExistsError
+from app.api.exceptions import ExistsError
 
 # from .forms import RegisterForm, ThreadForm
 
@@ -81,7 +83,7 @@ def login():
                 flash('Account created', 'success')
                 login_user(username, password)
                 return redirect(url_for('.index'))
-            except UserExistsError:
+            except ExistsError:
                 form.errors['username'] = ['Username already exists']
 
         if login_user(username, password):

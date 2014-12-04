@@ -1,7 +1,7 @@
 from flask import request, session, g, redirect, url_for, abort
 
 from . import api
-from ..exceptions import SubExistsError
+from ..exceptions import ExistsError
 from ..models import Category, Sub
 from .main import BaseMethodView
 
@@ -33,7 +33,7 @@ class SubListView(BaseMethodView):
         try:
             sub = Sub.create(category, title=data['title'],
                              description=data['description'])
-        except SubExistsError:
+        except ExistsError:
             return self.error('Sub exists', 409)
 
         return sub, 201

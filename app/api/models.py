@@ -5,7 +5,7 @@ from base64 import b64encode
 from app import redis
 from .helpers import hash_pass
 from .structures import AttrDict
-from .exceptions import UserExistsError, CategoryExistsError, SubExistsError
+from .exceptions import ExistsError
 
 
 def rkey(cls, _id):
@@ -174,7 +174,7 @@ class User(BaseModel):
     @classmethod
     def create(cls, username, password):
         if cls.get_id(username):
-            raise UserExistsError
+            raise ExistsError
 
         _id = cls._gen_id()
         cls.set(_id, username=username, password=hash_pass(password))
@@ -258,7 +258,7 @@ class Category(BaseModel):
     @classmethod
     def create(cls, title):
         if cls.get_id(title):
-            raise CategoryExistsError
+            raise ExistsError
 
         _id = cls._gen_id()
         category = cls.set(_id, title=title)
@@ -295,7 +295,7 @@ class Sub(BaseModel):
     @classmethod
     def create(cls, category, title, description=''):
         if cls.get_id(title):
-            raise SubExistsError
+            raise ExistsError
 
         _id = cls._gen_id()
         sub = cls.set(_id, title=title, description=description,

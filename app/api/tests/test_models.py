@@ -6,7 +6,7 @@ from werkzeug.security import check_password_hash
 
 from .. import models
 from ..helpers import hash_pass
-from ..exceptions import UserExistsError, CategoryExistsError
+from ..exceptions import ExistsError
 
 
 # global fakeredis patch
@@ -219,7 +219,7 @@ class UserModelTestCase(unittest.TestCase):
 
     def test_user_exists(self):
         models.User.create('marv', 'pass')
-        self.assertRaises(UserExistsError, models.User.create, 'marv', 'pass')
+        self.assertRaises(ExistsError, models.User.create, 'marv', 'pass')
 
     def test_hash_pass_function(self):
         password = 'test_pass'
@@ -338,7 +338,7 @@ class CategoryModelTestCase(unittest.TestCase):
         category = models.Category.create(title)
         assert category
         # create it again with same title
-        self.assertRaises(CategoryExistsError, models.Category.create, title)
+        self.assertRaises(ExistsError, models.Category.create, title)
 
     def test_edit_category(self):
         category = models.Category.create('cat')
@@ -426,7 +426,7 @@ class SubModelTestCase(unittest.TestCase):
         description = 'sub description'
         category = models.Category.create('category name')
         models.Sub.create(category, title, description)
-        self.assertRaises(models.SubExistsError,
+        self.assertRaises(ExistsError,
                           models.Sub.create, category, title, description)
 
     def test_delete_sub(self):
