@@ -17,6 +17,23 @@ class PostListView(BaseMethodView):
     def post(self):
         self.is_authenticated()
 
+        missing_data = self.missing_data(['thread', 'body'])
+        if missing_data:
+            return missing_data
+        data = request.json
+
+        thread = Thread.get(data['thread'])
+        if not thread:
+            abort(404)
+
+        if not is_complete_tags(data['body']):
+            return self.bad_request('malformed body data')
+
+        post = Post(user=g.user, thread=thread)
+        post = post.create(data['body'])
+        return post, 201
+
+
 
 class PostDetailView(BaseMethodView):
 

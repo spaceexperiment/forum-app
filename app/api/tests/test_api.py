@@ -163,7 +163,7 @@ class CategoryTestCase(BaseApiTestCase):
         self.login(admin=True)
         resp = self.post(url_for('api.category'),
                          {'title': 'category_title'})
-        assert resp.status_code == 201, resp.data
+        assert resp.status_code == 201
         assert resp.json['title'] == 'category_title'
         assert Category.get(resp.json['id'])['title'] == resp.json['title']
 
@@ -192,13 +192,13 @@ class CategoryTestCase(BaseApiTestCase):
         self.login(admin=True)
         resp = self.put(url_for('api.category', id=self.category.id), {})
         # 400 bad request because title not in post data
-        assert resp.status_code == 400, resp
+        assert resp.status_code == 400
 
     def test_put_category_404(self):
         self.login(admin=True)
         # bad id
         resp = self.put(url_for('api.category', id=2949), {'title': 'test'})
-        assert resp.status_code == 404, resp
+        assert resp.status_code == 404
 
     def test_delete_category(self):
         self.login(admin=True)
@@ -290,7 +290,7 @@ class SubTestCase(BaseApiTestCase):
         self.login(admin=True)
         # bad id
         resp = self.put(url_for('api.sub_detail', id=2949), {'title': 'test'})
-        assert resp.status_code == 404, resp
+        assert resp.status_code == 404
 
     def test_delete_sub(self):
         self.login(admin=True)
@@ -466,3 +466,31 @@ class PostTestCase(BaseApiTestCase):
         self.post('/api/login/', data)
         resp = self.delete(url_for('api.post_detail', id=self.post1.id))
         assert resp.status_code == 401
+
+    def test_post_post(self):
+        self.login()
+        data = {
+            'thread': self.thread2.id,
+            'body': '<h1>test</h1>'
+        }
+        resp = self.post(url_for('api.post_list'), data)
+
+        assert resp.status_code == 201
+        thread_posts = Thread.posts(self.thread2)
+        assert thread_posts[0] == resp.json
+
+    def test_post_post_wrong_thread(self):
+        self.login()
+        data = {
+            'thread': 123123123123,
+            'body': '<h1>test</h1>'
+        }
+        resp = self.post(url_for('api.post_list'), data)
+        assert resp.status_code == 404
+
+    def test_post_post_malformed_body(self):
+        self.login()
+        # open ended <p> tag
+        data = {'thread': self.thread2.id, 'body': '<p>dokasd'}
+        resp = self.post(url_for('api.post_list'), data)
+        assert resp.status_code == 400
