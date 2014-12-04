@@ -403,7 +403,7 @@ class Thread(BaseModel):
 
     @classmethod
     def posts(cls, thread, count=10, page=1):
-        key = '{}:posts'.format(thread.id)
+        key = 'thread:{}:posts'.format(thread.id)
         start = (page - 1) * count
         post_ids = redis.zrange(key, start, start + (count - 1), desc=True)
         return [Post.get(_id) for _id in post_ids]
