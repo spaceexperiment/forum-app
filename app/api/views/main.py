@@ -13,6 +13,13 @@ def index():
 
 class BaseMethodView(MethodView):
     decorators = [api_render]
+    model = None
+
+    def get_or_404(self, id):
+        obj = self.model.get(id)
+        if not obj:
+            abort(404)
+        return obj
 
     def is_admin(self):
         if hasattr(g, 'user'):

@@ -35,12 +35,7 @@ class ThreadListView(BaseMethodView):
 
 
 class ThreadDetailView(BaseMethodView):
-
-    def get_or_404(self, id):
-        thread = Thread.get(id)
-        if not thread:
-            abort(404)
-        return thread
+    model = Thread
 
     def is_user_thread(self, thread):
         if g.user.id == thread.user.id or g.user.is_admin == 'True':

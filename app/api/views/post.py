@@ -36,12 +36,7 @@ class PostListView(BaseMethodView):
 
 
 class PostDetailView(BaseMethodView):
-
-    def get_or_404(self, id):
-        post = Post.get(id)
-        if not post:
-            abort(404)
-        return post
+    model = Post
 
     def is_user_post(self, post):
         if g.user.id == post.user.id or g.user.is_admin == 'True':

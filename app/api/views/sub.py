@@ -40,12 +40,7 @@ class SubListView(BaseMethodView):
 
 
 class SubDetailView(BaseMethodView):
-
-    def get_or_404(self, id):
-        sub = Sub.get(id)
-        if not sub:
-            abort(404)
-        return sub
+    model = Sub
 
     def get(self, id):
         sub = self.get_or_404(id)
