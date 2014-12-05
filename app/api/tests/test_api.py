@@ -1,13 +1,11 @@
 import unittest
 import mock
 
-from flask import json, request, session, url_for
+from flask import json, session, url_for
 import fakeredis
 
 from app import app
-from .. import models
 from ..models import User, Category, Sub, Thread, Post
-from ..auth import login_user
 
 
 # global fakeredis patch
@@ -80,27 +78,37 @@ class UserTestCase(BaseApiTestCase):
         data = {'username': self.user.username, 'password': 'password'}
         self.post('/api/login/', data)
 
-    def test_register_user(self):
+    def test_get_list_view(self):
+        self.login(admin=True)
+        resp = self.get(url_for('api.user_list'))
+        assert len(resp.json) == len(User.all())
+
+    def test_get_list_view_unauthorized(self):
+        self.login()
+        resp = self.get(url_for('api.user_list'))
+        assert resp.status_code == 401
+
+    def test_post_listview(self):
         data = {'username': 'usercreation', 'password': 'password',
                 'repassword': 'password'}
         with self.client:
-            resp = self.post('/api/login/', data)
+            resp = self.post(url_for('api.user_list'), data)
             user = User.by_username(data['username'])
             assert resp.status_code == 201
             assert session['s_key'] == user.session
 
-    def test_register_user_password_no_match(self):
+    def test_post_listview_password_no_match(self):
         data = {'username': 'marv', 'password': 'password',
                 'repassword': 'worng_re_password'}
         with self.client:
-            resp = self.post('/api/login/', data)
+            resp = self.post(url_for('api.user_list'), data)
             assert resp.status_code == 401
             assert 'Password does not match' in resp.json['re-password']
 
-    def test_register_user_exists(self):
+    def test_post_listview_user_exists(self):
         data = {'username': self.user.username, 'password': 'password',
                 'repassword': 'password'}
-        resp = self.post('/api/login/', data)
+        resp = self.post(url_for('api.user_list'), data)
         assert resp.status_code == 401
         assert 'Username already exists' in resp.json['username']
 
@@ -403,7 +411,7 @@ class ThreadTestCase(BaseApiTestCase):
     def test_put_thread_clean_data(self):
         self.login()
         data = {'wrong_field': 'changed'}
-        resp = self.put(url_for('api.thread_detail', id=self.thread.id), data)
+        self.put(url_for('api.thread_detail', id=self.thread.id), data)
         thread = Thread.get(self.thread.id)
         assert not thread.wrong_field
 

@@ -4,12 +4,16 @@ from wtforms import Form, StringField, PasswordField, TextAreaField, validators
 wtforms_json.init()
 
 
+class LoginForm(Form):
+    username = StringField('username', [validators.Length(min=4, max=20)])
+    password = PasswordField('password', [validators.Length(min=4, max=30)])
+
+
 class RegisterForm(Form):
     username = StringField('username', [validators.Length(min=4, max=20)])
     password = PasswordField('password', [validators.Length(min=4, max=30)])
     repassword = PasswordField('re-password',
-                               [validators.Length(min=4, max=30),
-                                validators.Optional()])
+                               [validators.Length(min=4, max=30)])
 
 
 class ThreadForm(Form):
