@@ -8,14 +8,19 @@ from .structures import AttrDict
 from .exceptions import ExistsError
 
 
-def rkey(cls, _id):
-    """ return redis key string model:id """
-    return '{}:{}'.format(cls.model, _id)
+def rkey(cls, key):
+    """ return key string {model}:key """
+
+    return '{}:{}'.format(cls.model, key)
 
 
-def rmkey(cls, _id):
-    """ return redis key for field name, e.g. user:users """
-    return '{}:{}s'.format(cls.model, _id)
+def rmkey(cls, key):
+    """
+    return multi key string {model}:keys
+    same as rkey but with s at end of sting
+    """
+
+    return '{}:{}s'.format(cls.model, key)
 
 
 class BaseModel(object):
@@ -28,17 +33,13 @@ class BaseModel(object):
 
     @classmethod
     def _gen_key(cls):
-        """generate key, model:id"""
+        """generate key, {model}:id"""
 
         return rkey(cls, cls._gen_id())
 
     @classmethod
     def _field_add(cls, field, value):
-        """
-        set value to -> key model:field
-        also used to store values where no fields can have the
-        same values.
-        """
+        """ add value to set {model}:{field} """
 
         key = rkey(cls, field)
         return redis.zadd(key, int(time()), value)
@@ -46,7 +47,7 @@ class BaseModel(object):
     @classmethod
     def _field_rem(cls, field, value):
         """
-        remove value from -> key model:field
+        remove value from set {model}:{field}
         """
 
         key = rkey(cls, field)
@@ -73,8 +74,10 @@ class BaseModel(object):
     @classmethod
     def link_id(cls, field, _id):
         """
-        link a model field to id, model:models field=_id
-            where field is the value of a model field
+        link a model field to id in hash set, the key would be {model}:{models}
+        e.g.
+            key user:users could hold [username=4, username2=6 ...]
+            so we can get user id by username
         """
 
         key = rmkey(cls, cls.model)
@@ -82,7 +85,7 @@ class BaseModel(object):
 
     @classmethod
     def _link_id_change(cls, old_field, new_field):
-        """ change the key hash for for model:models """
+        """ change the key hash in {model}:{models} """
 
         key = rmkey(cls, cls.model)
         _id = redis.hget(key, old_field)
@@ -119,7 +122,7 @@ class BaseModel(object):
         """ set hash fields """
 
         key = rkey(cls, _id)
-        # add id to model:all set
+        # add id to {model}:all set
         cls._field_add('all', _id)
 
         return redis.hmset(key, fields)
@@ -142,7 +145,7 @@ class BaseModel(object):
     def delete(cls, _id):
         """ delete any key from database """
 
-        # remove id from model:all set
+        # remove id from {model}:all set
         cls._field_rem('all', _id)
 
         key = rkey(cls, _id)
@@ -150,14 +153,14 @@ class BaseModel(object):
 
     @classmethod
     def delete_field(cls, _id, *fields):
-        """ delete fields from hash """
+        """ delete field(s) from hash """
 
         key = rkey(cls, _id)
         return redis.hdel(key, *fields)
 
     @classmethod
     def all_ids(cls):
-        """ return id set for key model:all """
+        """ return id set for key {model}:all """
 
         return cls._field_values('all')
 
@@ -173,6 +176,8 @@ class User(BaseModel):
 
     @classmethod
     def create(cls, username, password):
+        """ create user """
+
         if cls.get_id(username):
             raise ExistsError
 
@@ -184,12 +189,18 @@ class User(BaseModel):
 
     @classmethod
     def edit(cls, _id, link='username', **fields):
+        """ change users field(s) value """
+
+        # hash password if provided
         if 'password' in fields.keys():
             fields['password'] = hash_pass(fields['password'])
+
         return super(User, cls).edit(_id=_id, link=link, **fields)
 
     @classmethod
     def by_username(cls, username):
+        """ get user by username """
+
         _id = cls.get_id(username)
         return cls.get(_id)
 
@@ -261,7 +272,7 @@ class Category(BaseModel):
             raise ExistsError
 
         _id = cls._gen_id()
-        category = cls.set(_id, title=title)
+        cls.set(_id, title=title)
 
         cls.link_id(title, _id)
         return cls.get(_id)
@@ -298,8 +309,7 @@ class Sub(BaseModel):
             raise ExistsError
 
         _id = cls._gen_id()
-        sub = cls.set(_id, title=title, description=description,
-                      category=category.id)
+        cls.set(_id, title=title, description=description, category=category.id)
 
         key = '{}:subs'.format(category.id)
         Category._field_add(key, _id)
