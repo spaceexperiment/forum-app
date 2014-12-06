@@ -342,7 +342,7 @@ class CategoryModelTestCase(unittest.TestCase):
 
     def test_edit_category(self):
         category = models.Category.create('cat')
-        models.Category.edit(_id=category.id, title='new cat')
+        models.Category.edit(category.id, title='new cat')
         new_cat = models.Category.get(category.id)
         assert not category == new_cat
         assert not models.Category.get_id('cat')
@@ -452,7 +452,7 @@ class SubModelTestCase(unittest.TestCase):
         assert sub.description == description
         assert models.Sub.get_id(title)
 
-        models.Sub.edit(_id=sub.id, title='title2', description='desc2')
+        models.Sub.edit(sub.id, title='title2', description='desc2')
         sub = models.Sub.get(sub.id)
         assert sub.title == 'title2'
         assert sub.description == 'desc2'
