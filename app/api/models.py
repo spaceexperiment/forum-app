@@ -85,7 +85,7 @@ class BaseModel(object):
 
     @classmethod
     def _link_id_change(cls, old_field, new_field):
-        """ change the key hash in {model}:{models} """
+        """ change the hash field value in {model}:{models} """
 
         key = rmkey(cls, cls.model)
         id = redis.hget(key, old_field)
@@ -94,14 +94,18 @@ class BaseModel(object):
 
     @classmethod
     def _link_id_delete(cls, field):
-        """ delete the key hash for for model:models """
+        """ delete a hash field for {model}:{models} """
 
         key = rmkey(cls, cls.model)
         redis.hdel(key, field)
 
     @classmethod
     def get_id(cls, field):
-        """ get id based on a model's field value """
+        """
+        get id based on a model's field
+        e.g. get id for a username from the
+             key user:users that holds [username=4, username2=6 ...]
+        """
 
         key = rmkey(cls, cls.model)
         return redis.hget(key, field)
@@ -119,10 +123,11 @@ class BaseModel(object):
 
     @classmethod
     def set(cls, id, **fields):
-        """ set hash fields """
+        """
+        set value for hash fields in {model}:{id} and add {id} to {model}:all
+        """
 
         key = rkey(cls, id)
-        # add id to {model}:all set
         cls._field_add('all', id)
 
         return redis.hmset(key, fields)
@@ -153,20 +158,20 @@ class BaseModel(object):
 
     @classmethod
     def delete_field(cls, id, *fields):
-        """ delete field(s) from hash """
+        """ delete field(s) from hash object"""
 
         key = rkey(cls, id)
         return redis.hdel(key, *fields)
 
     @classmethod
     def all_ids(cls):
-        """ return id set for key {model}:all """
+        """ return id set from key {model}:all """
 
         return cls._field_values('all')
 
     @classmethod
     def all(cls):
-        """ return all objects for any given model """
+        """ return all objects from any given model """
 
         return [cls.get(id) for id in cls.all_ids()]
 
